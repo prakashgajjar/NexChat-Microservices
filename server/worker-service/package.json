@@ -1,0 +1,11 @@
+{
+  "name": "worker-service",
+  "version": "1.0.0",
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "node-cron": "^3.0.3",
+    "axios": "^1.7.3",
+    "dotenv": "^16.3.1",
+    "redis": "^4.6.11"
+  }
+}

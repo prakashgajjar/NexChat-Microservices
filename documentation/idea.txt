@@ -1,0 +1,6 @@
+so basicaly i want to make a app so anyone make a make a account using gmail and chat with 1-1 and also with group and 
+the flow user will make a username and they can serch the person in seach and tehy send the message requist ef he/she accept 
+the use can start the chating chat will incrptend also will chat we near user for time pass they can chat with his 1 km person directly
+with our app   
+
+- 3rd and most important feature is if you dont have internet then also you can chat with 10-30 m blutooth via chat in our app 
