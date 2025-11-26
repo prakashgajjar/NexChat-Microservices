@@ -3,4 +3,29 @@ the flow user will make a username and they can serch the person in seach and te
 the use can start the chating chat will incrptend also will chat we near user for time pass they can chat with his 1 km person directly
 with our app   
 
-- 3rd and most important feature is if you dont have internet then also you can chat with 10-30 m blutooth via chat in our app 
+
+tech 
+
+DB : we use redis , mongodb , indexDB(in frontend for store chat if user offline)
+backend : express
+frontend : next js 
+auth : jwt + google auth
+realtime : sockets 
+Encryption : Web Crypto
+form : Zod
+map : Leaflet
+mail services : nodemailer
+job quueue : bull
+tweetnacl : public key / private key
+Cloudflare : verification
+
+infrastructure :
+ docker
+ proxy server : Nginx
+ versin controll : git 
+ auto deploy : CI/CD
+ cloud provider : vercle
+
+ testing : jest and k6 
+
+

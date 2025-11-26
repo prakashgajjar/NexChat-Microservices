@@ -1,0 +1,40 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.6",
+    "axios": "*",
+    "bcryptjs": "*",
+    "cookie-parser": "*",
+    "cors": "*",
+    "dotenv": "*",
+    "express": "*",
+    "express-async-errors": "*",
+    "helmet": "*",
+    "joi": "*",
+    "jsonwebtoken": "*",
+    "mongoose": "*",
+    "morgan": "*",
+    "node-forge": "*",
+    "nodemailer": "^7.0.10",
+    "passport": "*",
+    "passport-google-oauth20": "*",
+    "redis": "^5.9.0",
+    "resend": "^6.5.2",
+    "sib-api-v3-sdk": "^8.5.0",
+    "tweetnacl": "*",
+    "uuid": "*",
+    "winston": "*"
+  },
+  "devDependencies": {
+    "eslint": "*",
+    "nodemon": "*",
+    "prettier": "*"
+  }
+}

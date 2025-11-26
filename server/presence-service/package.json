@@ -1,5 +1,5 @@
 {
-  "name": "worker-service",
+  "name": "presence-service",
   "version": "1.0.0",
   "main": "src/index.js",
   "type": "module",
@@ -10,12 +10,15 @@
   "dependencies": {
     "express": "*",
     "dotenv": "*",
+    "cors": "*",
+    "helmet": "*",
     "morgan": "*",
+    "express-async-errors": "*",
     "axios": "*",
-    "bullmq": "*",
     "redis": "*",
     "uuid": "*",
-    "winston": "*"
+    "winston": "*",
+    "joi": "*"
   },
   "devDependencies": {
     "nodemon": "*",

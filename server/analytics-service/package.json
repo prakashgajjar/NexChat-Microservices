@@ -1,19 +1,21 @@
 {
-  "name": "worker-service",
+  "name": "analytics-service",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "*",
     "dotenv": "*",
+    "cors": "*",
+    "helmet": "*",
     "morgan": "*",
+    "express-async-errors": "*",
+    "mongoose": "*",
     "axios": "*",
-    "bullmq": "*",
-    "redis": "*",
     "uuid": "*",
     "winston": "*"
   },

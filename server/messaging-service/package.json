@@ -1,5 +1,5 @@
 {
-  "name": "worker-service",
+  "name": "chat-service",
   "version": "1.0.0",
   "main": "src/index.js",
   "type": "module",
@@ -10,12 +10,20 @@
   "dependencies": {
     "express": "*",
     "dotenv": "*",
+    "cors": "*",
+    "helmet": "*",
     "morgan": "*",
+    "express-async-errors": "*",
+    "socket.io": "*",
+    "jsonwebtoken": "*",
     "axios": "*",
-    "bullmq": "*",
+    "mongoose": "*",
     "redis": "*",
     "uuid": "*",
-    "winston": "*"
+    "tweetnacl": "*",
+    "node-forge": "*",
+    "winston": "*",
+    "joi": "*"
   },
   "devDependencies": {
     "nodemon": "*",
