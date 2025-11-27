@@ -6,12 +6,13 @@ import connectDB from "./configs/db.config.js";
 import otpRoutes from "./routes/otp.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 
-dotenv.config();
+const PATH =  "../../.env" ;
+dotenv.config({ path:PATH});
 const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"], 
+    origin: [process.env.NEXT_PUBLIC_BASE_URL], 
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   })
 );
@@ -23,6 +24,6 @@ connectDB();
 app.use("/api/otp", otpRoutes);
 app.use("/api/auth", authRoutes);
 
-app.listen(process.env.PORT, () =>
-  console.log(`Auth service running on port ${process.env.PORT}`)
+app.listen(process.env.PORT_AUTH, () =>
+  console.log(`Auth service running on port ${process.env.PORT_AUTH }`)
 );

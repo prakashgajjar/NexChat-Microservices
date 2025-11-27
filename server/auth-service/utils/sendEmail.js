@@ -19,7 +19,7 @@ export const sendEmail = async (to, subject, text) => {
     });
 
     const info = await transporter.sendMail({
-      from: `"MyApp" <${process.env.EMAIL_USER}>`,
+      from: `"NextChat" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
