@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const UserKeys = new mongoose.Schema({
+const UserKeysSchema = new mongoose.Schema({
   userId: { type: String, unique: true, required: true },
 
   // Permanent identity key (public)
@@ -14,14 +14,17 @@ const UserKeys = new mongoose.Schema({
   signedPreKeyPrivateEncrypted: { type: String, required: true },
   signedPreKeySignature: { type: String, required: true },
 
-  // One-time pre-keys (pool)
-  oneTimePreKeys: [{
-    publicKey: String,
-    privateKeyEncrypted: String,
-    used: { type: Boolean, default: false }
-  }],
+  // One-time pre-keys pool
+  oneTimePreKeys: [
+    {
+      publicKey: String,
+      privateKeyEncrypted: String,
+      used: { type: Boolean, default: false },
+    }
+  ],
 
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model("UserKeys" , UserKeys)
+// Correct export
+export default mongoose.model("UserKeys", UserKeysSchema);
