@@ -1,24 +1,41 @@
 import jwt from "jsonwebtoken";
-import User  from "../models/AuthUser.models.js";
 
 export const refresh = async (req, res) => {
-  const token = req.cookies.refreshToken;
-  if (!token) return res.status(401).json({ message: "No refresh token" });
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.userId);
-    if (!user || !user.refreshTokens.includes(token))
-      return res.status(403).json({ message: "Invalid refresh token" });
+    const token = req.cookies.refreshToken;
 
-    const newAccess = jwt.sign(
-      { userId: user._id },
+    console.log(token)
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+
+    // Generate new access token
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId },
       process.env.JWT_SECRET,
       { expiresIn: "30m" }
     );
+    const isDev = process.env.NODE_ENV === "development";
 
-    res.json({ accessToken: newAccess });
+    // Send access token in cookie OR json
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: !isDev, // secure only in production
+      sameSite: isDev ? "lax" : "none",
+      maxAge: 30 * 60 * 1000,
+      path: "/",
+    });
+
+    return res.json({
+      message: "Access token refreshed",
+      accessToken: newAccessToken,
+    });
   } catch (err) {
-    res.status(403).json({ message: "Token expired or invalid" });
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired refresh token" });
   }
 };

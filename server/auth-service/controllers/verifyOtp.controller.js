@@ -61,20 +61,19 @@ export const verifyOtp = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    const isDev = process.env.NODE_ENV === "development";
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: !isDev, // secure only in production
-      sameSite: isDev ? "lax" : "none",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: !isDev, // secure only in production
-      sameSite: isDev ? "lax" : "none",
+      secure: true,
+      sameSite: "none",
       maxAge: 30 * 60 * 1000,
       path: "/",
     });

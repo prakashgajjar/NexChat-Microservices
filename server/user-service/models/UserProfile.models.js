@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
   // Basic identity
   userId: { type: String, unique: true, required: true },
   username: { type: String, required: true },
+  fullname:{type:String},
   email: { type: String },
   phone: { type: String },
 

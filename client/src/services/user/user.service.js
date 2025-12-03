@@ -4,7 +4,7 @@ const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL_USER || "http://localhost:5
 
 export async function getAllUsers() {
   try {
-    const res = await fetch(`${API_BASE}/user/all`);
+    const res = await fetch(`${API_BASE}/api/user/all`);
     const data = await res.json();
 
     if (!data.success) throw new Error(data.message);
