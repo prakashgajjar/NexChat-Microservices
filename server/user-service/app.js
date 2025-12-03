@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import  connectDB  from "./configs/db.config.js";
 import storeKeys from "./routes/storeKeys.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 const PATH =  "../../.env" ;
 dotenv.config({ path:PATH});
@@ -20,7 +21,7 @@ app.use(express.json());
 connectDB();
 
 app.use("/api/keys", storeKeys);
-// app.use("/api/profile", authRoutes);
+app.use("/api/user", userRoutes);
 
 app.listen(process.env.PORT_USER, () =>
   console.log(`Auth service running on port ${process.env.PORT_USER}`)

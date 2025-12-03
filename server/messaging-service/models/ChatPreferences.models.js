@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+
+
 const ChatPreferences = new mongoose.Schema({
   userId: { type: String, required: true },
   chatId: { type: String, required: true },
@@ -6,3 +9,5 @@ const ChatPreferences = new mongoose.Schema({
   bubbleColor: { type: String, default: "#4f46e5" },
   font: { type: String, default: "default" }
 });
+
+export default mongoose.model("ChatPreferences", ChatPreferences);

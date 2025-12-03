@@ -2,12 +2,17 @@ import bcrypt from "bcryptjs";
 import User from "../models/AuthUser.models.js";
 import redis from "../configs/redis.config.js";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { contact, otp, username, password } = req.body;
+    const { email, otp, username, password } = req.body;
+    console.log(email, otp, username, password);
+    if (!email || !otp || !username || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
     // console.log(contact, otp, username, password);
-    const storedOtp = await redis.get(`otp:${contact}`);
+    const storedOtp = await redis.get(`otp:${email}`);
     // console.log("stored otp", storedOtp);
 
     if (!storedOtp) {
@@ -22,33 +27,57 @@ export const verifyOtp = async (req, res) => {
 
     // create user
     const user = await User.create({
-      email: contact,
-      username,
+      email: email,
       password: hash,
-      verified: true,
     });
 
     const keys = await axios.post(
-      `${process.env.USER_SERVICE_URL}/api/keys/store`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL_USER}/api/keys/store`,
       {
-        userId: user._id,
+        data: {
+          userId: user._id,
+          email: email,
+          username,
+        },
       }
     );
 
-    if (!keys) {
+    if (keys.data.success !== true) {
       await User.deleteOne({ _id: user._id });
       return res.status(500).json({ message: "User creation failed" });
-    }
-
-    try {
-      await redis.del(`otp:${contact}`);
-    } catch (error) {
-      console.log(error?.message);
     }
 
     if (!user) {
       return res.status(500).json({ message: "User creation failed" });
     }
+
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30m",
+    });
+
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    const isDev = process.env.NODE_ENV === "development";
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: !isDev, // secure only in production
+      sameSite: isDev ? "lax" : "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: !isDev, // secure only in production
+      sameSite: isDev ? "lax" : "none",
+      maxAge: 30 * 60 * 1000,
+      path: "/",
+    });
 
     res.json({ message: "Signup complete", userId: user._id });
   } catch (err) {

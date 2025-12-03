@@ -1,11 +1,11 @@
 {
   "name": "presence-service",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "*",

@@ -5,8 +5,8 @@ import redis from "../configs/redis.config.js";
 export const sendOtp = async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email || !email.includes("@")) {
+    console.log(email);
+    if (!email) {
       return res.status(400).json({ error: "Invalid email" });
     }
 

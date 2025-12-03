@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+
+
 const Chat = new mongoose.Schema({
   chatId: { type: String, unique: true },
   members: [{ type: String }],    // array of userId strings

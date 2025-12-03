@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const Message = new mongoose.Schema({
   messageId: { type: String, unique: true },
   chatId: { type: String, required: true },

@@ -1,33 +1,36 @@
 {
   "name": "chat-service",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "dependencies": {
-    "express": "*",
-    "dotenv": "*",
-    "cors": "*",
-    "helmet": "*",
-    "morgan": "*",
-    "express-async-errors": "*",
-    "socket.io": "*",
-    "jsonwebtoken": "*",
     "axios": "*",
+    "cookie-parser": "^1.4.7",
+    "cookieparser": "^0.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "*",
+    "express": "*",
+    "express-async-errors": "*",
+    "helmet": "*",
+    "idb": "^8.0.3",
+    "joi": "*",
+    "jsonwebtoken": "*",
     "mongoose": "*",
-    "redis": "*",
-    "uuid": "*",
-    "tweetnacl": "*",
+    "morgan": "*",
     "node-forge": "*",
-    "winston": "*",
-    "joi": "*"
+    "redis": "*",
+    "socket.io": "*",
+    "tweetnacl": "*",
+    "uuid": "*",
+    "winston": "*"
   },
   "devDependencies": {
-    "nodemon": "*",
     "eslint": "*",
+    "nodemon": "*",
     "prettier": "*"
   }
 }
