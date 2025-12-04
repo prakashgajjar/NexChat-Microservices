@@ -1,22 +1,22 @@
 "use client";
+
 import { useState, useRef } from "react";
 import { FiSend } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext.context.js";
 
-export default function ChatWindow({ selectedChat }) {
+export default function ChatWindow() {
   const { theme } = useTheme();
+  const { selectedUser } = useAppContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
 
-  // Avatar letter (grayscale)
   const avatarLetter = () => {
-    if (!selectedChat) return "?";
-    const name = selectedChat.name || selectedChat.chatId || "U";
-    return name.charAt(0).toUpperCase();
+    if (!selectedUser) return "?";
+    return selectedUser.username?.charAt(0)?.toUpperCase() || "?";
   };
 
-  // Dummy send handler
   const handleSend = () => {
     if (!input.trim()) return;
 
@@ -31,13 +31,36 @@ export default function ChatWindow({ selectedChat }) {
     setInput("");
 
     setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }, 50);
   };
 
+  // ---------------------------------------------------------
+  // ✅ WhatsApp-style empty screen (when no user selected)
+  // ---------------------------------------------------------
+  if (!selectedUser) {
+    return (
+      <div
+        className={`flex-1 flex flex-col items-center justify-center ${
+          theme === "dark" ? "bg-zinc-900 text-gray-300" : "bg-gray-100 text-gray-600"
+        }`}
+      >
+        <div className="text-5xl mb-4">💬</div>
+
+        <h2 className="text-3xl font-semibold mb-2">NexChat</h2>
+
+        <p className="text-sm opacity-80">
+          End-to-end encrypted messaging. Select a user to start chatting.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full">
-
       {/* Header */}
       <header
         className={`flex items-center justify-between px-6 py-3 border-b ${
@@ -47,22 +70,23 @@ export default function ChatWindow({ selectedChat }) {
         }`}
       >
         <div className="flex items-center space-x-3">
-          {/* Avatar (grayscale) */}
+          {/* Avatar */}
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold
-            ${theme === "dark" ? "bg-zinc-800 text-gray-200" : "bg-gray-200 text-gray-700"}`}
+            ${
+              theme === "dark"
+                ? "bg-zinc-800 text-gray-200"
+                : "bg-gray-200 text-gray-700"
+            }`}
           >
             {avatarLetter()}
           </div>
 
-          {/* Name */}
-          <p className="font-semibold">
-            {selectedChat?.name || selectedChat?.chatId || "Select chat"}
-          </p>
+          <p className="font-semibold">{selectedUser.username}</p>
         </div>
       </header>
 
-      {/* Chat area */}
+      {/* Chat Area */}
       <div
         ref={scrollRef}
         className={`flex-1 overflow-y-auto px-6 py-4 space-y-3 ${
@@ -84,11 +108,7 @@ export default function ChatWindow({ selectedChat }) {
               }`}
             >
               <p>{msg.text}</p>
-              <span
-                className={`block text-[10px] mt-1 text-right ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
+              <span className={`block text-[10px] mt-1 text-right ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                 {msg.time}
               </span>
             </div>
@@ -117,11 +137,9 @@ export default function ChatWindow({ selectedChat }) {
           `}
         />
 
-        {/* SEND BUTTON (grayscale) */}
         <button
           onClick={handleSend}
-          className={`
-            ml-3 p-2 rounded-lg transition border 
+          className={`ml-3 p-2 rounded-lg transition border 
             ${
               theme === "dark"
                 ? "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-gray-200"

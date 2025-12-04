@@ -1,10 +1,29 @@
 "use client";
-import { useTheme } from "../context/ThemeContext";
 
-export default function ChatList({ chats, selectedChat, setSelectedChat }) {
+import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
+import { getAllUsers } from "@/services/user/user.service.js";
+import { useAppContext } from "@/context/AppContext.context.js";
+
+export default function ChatList() {
   const { theme } = useTheme();
+  const { selectedUser, setSelectedUser } = useAppContext();
+  const [users, setUsers] = useState([]);
 
   const isDark = theme === "dark";
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await getAllUsers();
+        console.log(res);
+        setUsers(res);
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+    loadUsers();
+  }, []);
 
   return (
     <div
@@ -25,11 +44,9 @@ export default function ChatList({ chats, selectedChat, setSelectedChat }) {
         }`}
       >
         <h1
-          className={`
-    text-3xl font-bold mb-2 bg-linear-to-r 
-    ${isDark ? "from-gray-300 to-gray-500" : "from-zinc-700 to-zinc-500"}
-    text-transparent bg-clip-text
-  `}
+          className={`text-3xl font-bold mb-2 bg-gradient-to-r ${
+            isDark ? "from-gray-300 to-gray-500" : "from-zinc-700 to-zinc-500"
+          } text-transparent bg-clip-text`}
         >
           NexChat
         </h1>
@@ -52,28 +69,24 @@ export default function ChatList({ chats, selectedChat, setSelectedChat }) {
         />
       </div>
 
-      {/* Chat List */}
+      {/* Users List */}
       <div className="overflow-y-auto flex-1">
-        {chats.length === 0 && (
-          <div className="text-center text-gray-500 py-6 text-sm">
-            No chats yet
-          </div>
+        {users.length === 0 && (
+          <div className="text-center text-gray-500 py-6 text-sm">No users found</div>
         )}
 
-        {chats.map((chat) => {
-          const id = chat.chatId || chat.id || chat.name;
-          const isActive = selectedChat === id;
+        {users.map((u) => {
+          const isSelected = selectedUser?._id === u._id;
 
           return (
             <div
-              key={id}
-              onClick={() => setSelectedChat(id)}
-              className={`
-                flex items-center px-4 py-3 cursor-pointer transition-all 
+              key={u._id}
+              onClick={() => setSelectedUser(u)} // ✅ select full user
+              className={`flex items-center gap-3 p-3 border-b border-gray-700/20 cursor-pointer transition-all
                 ${
-                  isActive
+                  isSelected
                     ? isDark
-                      ? "bg-zinc-700/40 border-l-4 border-blue-500"
+                      ? "bg-zinc-700/50 border-l-4 border-blue-500"
                       : "bg-blue-50 border-l-4 border-blue-500"
                     : isDark
                     ? "hover:bg-zinc-800"
@@ -83,37 +96,24 @@ export default function ChatList({ chats, selectedChat, setSelectedChat }) {
             >
               {/* Avatar */}
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold 
-                  ${
-                    isDark
-                      ? "bg-blue-900 text-blue-200"
-                      : "bg-blue-100 text-blue-700"
-                  }
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow 
+                  ${isSelected ? "bg-blue-600 text-white" : "bg-blue-500 text-white"}
                 `}
               >
-                {chat.name?.charAt(0)?.toUpperCase()}
+                {u.username?.charAt(0)?.toUpperCase()}
               </div>
 
-              {/* Chat info */}
-              <div className="ml-3 flex-1">
-                <p className="font-medium truncate">{chat.name}</p>
+              {/* User Info */}
+              <div className="flex-1">
+                <p className="font-semibold">{u.username}</p>
                 <p
-                  className={`text-sm truncate ${
+                  className={`text-sm ${
                     isDark ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {chat.message || "No messages yet"}
+                  {u.email}
                 </p>
               </div>
-
-              {/* Time */}
-              <span
-                className={`text-xs ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-              >
-                {chat.time}
-              </span>
             </div>
           );
         })}

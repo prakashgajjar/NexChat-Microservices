@@ -55,6 +55,13 @@ export const storeUserData = async (req, res) => {
     // Save keys in DB
     const savedKeys = await UserKeys.create(keyBundle);
 
+    try {
+      createdUser.identityPublicKey = keyBundle.identityPublicKey;
+      await createdUser.save();
+    } catch (error) {
+      console.error("Error saving identity public key to user profile:", error);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Keys generated & stored successfully",
@@ -63,7 +70,6 @@ export const storeUserData = async (req, res) => {
         user: createdUser || existingUser,
       },
     });
-
   } catch (error) {
     console.error("Error creating user keys:", error);
     return res.status(500).json({

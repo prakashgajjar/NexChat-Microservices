@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
-  const accessToken = req.cookies.get("accessToken")?.value;
+  const accessToken = req.cookies.get("refreshToken")?.value;
   const { pathname } = req.nextUrl;
 
   const isAuthPage =
