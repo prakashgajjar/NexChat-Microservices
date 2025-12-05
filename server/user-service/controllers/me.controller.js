@@ -1,12 +1,14 @@
 import User from "../models/UserProfile.models.js";
 
-const getUser = async (req, res) => {
+const getMe = async (req, res) => {
   try {
-    const  userId  = req.user;
+    const userId = req.user.userId;
     const user = await User.findOne({ userId }).lean();
 
     if (!user)
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
 
     return res.json({ success: true, data: user });
   } catch (err) {
@@ -15,4 +17,4 @@ const getUser = async (req, res) => {
   }
 };
 
-export default getUser;
+export default getMe;

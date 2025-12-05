@@ -6,9 +6,10 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   return (
-    <AppContext.Provider value={{ selectedUser, setSelectedUser }}>
+    <AppContext.Provider value={{ selectedUser, setSelectedUser, currentUser, setCurrentUser }}>
       {children}
     </AppContext.Provider>
   );

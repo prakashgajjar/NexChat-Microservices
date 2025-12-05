@@ -1,35 +1,88 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext.context.js";
+import {
+  sendMessage,
+  getMessages,
+} from "@/services/message/message.service.js";
+
+// Format time like WhatsApp → "4:23 PM"
+function formatMessageTime(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Format date section → "Today", "Yesterday", "05 Dec 2025"
+function getDateLabel(dateString) {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) return "Today";
+  if (isYesterday) return "Yesterday";
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function ChatWindow() {
   const { theme } = useTheme();
-  const { selectedUser } = useAppContext();
+  const { selectedUser, currentUser } = useAppContext();
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
 
-  const avatarLetter = () => {
-    if (!selectedUser) return "?";
-    return selectedUser.username?.charAt(0)?.toUpperCase() || "?";
-  };
+  // Load messages whenever selected user changes
+  useEffect(() => {
+    if (!selectedUser?.userId || !currentUser?.userId) return;
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+    let isMounted = true;
 
-    const newMsg = {
-      id: Date.now(),
-      text: input,
-      fromMe: true,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    async function loadMessages() {
+      try {
+        setMessages([]); // Clear old chat instantly
+        const msgs = await getMessages(selectedUser.userId);
+
+        if (!isMounted) return;
+
+        const formatted = msgs.map((m) => ({
+          id: m._id,
+          text: m.cipherText ? atob(m.cipherText) : "",
+          senderId: m.senderId,
+          receiverId: m.receiverId,
+          createdAt: m.createdAt,
+          fromMe: m.senderId === currentUser.userId,
+        }));
+
+        setMessages(formatted);
+      } catch (err) {
+        console.error("Load messages error:", err);
+      }
+    }
+
+    loadMessages();
+
+    return () => {
+      isMounted = false;
     };
+  }, [selectedUser?.userId, currentUser?.userId]);
 
-    setMessages((prev) => [...prev, newMsg]);
-    setInput("");
-
+  // Auto-scroll
+  const scrollToBottom = () => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({
         top: scrollRef.current.scrollHeight,
@@ -38,22 +91,61 @@ export default function ChatWindow() {
     }, 50);
   };
 
-  // ---------------------------------------------------------
-  // ✅ WhatsApp-style empty screen (when no user selected)
-  // ---------------------------------------------------------
+  // Send Message
+  const handleSend = async () => {
+    if (!input.trim() || !currentUser) return;
+
+    const tempId = Date.now();
+    const tempMessage = {
+      id: tempId,
+      text: input,
+      createdAt: new Date().toISOString(),
+      fromMe: true,
+      senderId: currentUser.userId,
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+    scrollToBottom();
+
+    const messageText = input;
+    setInput("");
+
+    try {
+      const payload = {
+        recipientId: selectedUser.userId,
+        cipherText: btoa(messageText),
+        iv: btoa("iv"),
+        encryptedKey: btoa("key"),
+      };
+
+      const saved = await sendMessage(payload);
+
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
+      );
+    } catch (err) {
+      console.error("Send message failed:", err);
+    }
+  };
+
+  // Avatar
+  const avatarLetter = () =>
+    selectedUser?.username?.charAt(0)?.toUpperCase() || "?";
+
+  // Default screen when no user selected
   if (!selectedUser) {
     return (
       <div
-        className={`flex-1 flex flex-col items-center justify-center ${
-          theme === "dark" ? "bg-zinc-900 text-gray-300" : "bg-gray-100 text-gray-600"
+        className={`flex-1 flex flex-col items-center justify-center text-center ${
+          theme === "dark"
+            ? "bg-zinc-900 text-gray-300"
+            : "bg-gray-100 text-gray-700"
         }`}
       >
         <div className="text-5xl mb-4">💬</div>
-
-        <h2 className="text-3xl font-semibold mb-2">NexChat</h2>
-
-        <p className="text-sm opacity-80">
-          End-to-end encrypted messaging. Select a user to start chatting.
+        <h2 className="text-3xl font-semibold">NexChat</h2>
+        <p className="opacity-70 mt-2 text-sm">
+          End-to-end encrypted. Select a user to start a conversation.
         </p>
       </div>
     );
@@ -61,91 +153,123 @@ export default function ChatWindow() {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Header */}
+      {/* HEADER */}
       <header
-        className={`flex items-center justify-between px-6 py-3 border-b ${
+        className={`flex items-center gap-3 px-6 py-3 border-b ${
           theme === "dark"
             ? "bg-zinc-900 border-zinc-800 text-gray-100"
             : "bg-white border-gray-200 text-black"
         }`}
       >
-        <div className="flex items-center space-x-3">
-          {/* Avatar */}
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold
-            ${
-              theme === "dark"
-                ? "bg-zinc-800 text-gray-200"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {avatarLetter()}
-          </div>
-
-          <p className="font-semibold">{selectedUser.username}</p>
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+            theme === "dark"
+              ? "bg-zinc-800 text-gray-200"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          {avatarLetter()}
         </div>
+        <p className="font-semibold">{selectedUser.username}</p>
       </header>
 
-      {/* Chat Area */}
+      {/* CHAT MESSAGES */}
       <div
         ref={scrollRef}
         className={`flex-1 overflow-y-auto px-6 py-4 space-y-3 ${
           theme === "dark" ? "bg-zinc-900" : "bg-gray-50"
         }`}
       >
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.fromMe ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`px-4 py-2 rounded-2xl max-w-xs text-sm shadow-sm 
-              ${
-                msg.fromMe
-                  ? theme === "dark"
-                    ? "bg-zinc-700 text-white"
-                    : "bg-zinc-300 text-black"
-                  : theme === "dark"
-                  ? "bg-zinc-800 text-gray-100 border border-zinc-700"
-                  : "bg-white border border-gray-300"
-              }`}
-            >
-              <p>{msg.text}</p>
-              <span className={`block text-[10px] mt-1 text-right ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                {msg.time}
-              </span>
+        {/** WhatsApp Style Date Separator */}
+        {(() => {
+          // Group messages by date label
+          const grouped = messages.reduce((acc, msg) => {
+            const dateLabel = getDateLabel(msg.createdAt);
+            if (!acc[dateLabel]) acc[dateLabel] = [];
+            acc[dateLabel].push(msg);
+            return acc;
+          }, {});
+
+          return Object.entries(grouped).map(([dateLabel, msgs]) => (
+            <div key={dateLabel}>
+              <div className="text-center my-3">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs ${
+                    theme === "dark"
+                      ? "bg-zinc-800 text-gray-300"
+                      : "bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  {dateLabel}
+                </span>
+              </div>
+              {msgs.map((msg) => {
+                const isMine = msg.fromMe;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      isMine ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`px-3 py-2 mb-[2px] rounded-xl max-w-xs text-sm shadow 
+      ${
+        isMine
+          ? theme === "dark"
+            ? "bg-zinc-700 text-white"
+            : "bg-zinc-300 text-black"
+          : theme === "dark"
+          ? "bg-zinc-800 border border-zinc-700 text-gray-100"
+          : "bg-white border border-gray-300"
+      }
+    `}
+                    >
+                      <div className="flex items-end gap-2">
+                        <p className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                          {msg.text}
+                        </p>
+
+                        <span className="text-[10px] opacity-70 min-w-fit">
+                          {formatMessageTime(msg.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        ))}
+          ));
+        })()}
       </div>
 
-      {/* Footer */}
+      {/* INPUT BAR */}
       <footer
         className={`p-4 border-t flex items-center ${
-          theme === "dark" ? "bg-zinc-900 border-zinc-800" : "bg-white border-gray-200"
+          theme === "dark"
+            ? "bg-zinc-900 border-zinc-800"
+            : "bg-white border-gray-200"
         }`}
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          type="text"
           placeholder="Type a message"
-          className={`flex-1 p-2 rounded-lg border text-sm focus:outline-none focus:ring-2 
-            ${
-              theme === "dark"
-                ? "bg-zinc-800 text-gray-200 border-zinc-700 focus:ring-zinc-600"
-                : "bg-white text-black border-gray-300 focus:ring-gray-400"
-            }
-          `}
+          className={`flex-1 p-2 rounded-lg border focus:outline-none focus:ring-2 ${
+            theme === "dark"
+              ? "bg-zinc-800 text-gray-200 border-zinc-700 focus:ring-zinc-600"
+              : "bg-white text-black border-gray-300 focus:ring-gray-400"
+          }`}
         />
 
         <button
           onClick={handleSend}
-          className={`ml-3 p-2 rounded-lg transition border 
-            ${
-              theme === "dark"
-                ? "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-gray-200"
-                : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-black"
-            }
-          `}
+          className={`ml-3 p-2 rounded-lg transition border ${
+            theme === "dark"
+              ? "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-gray-200"
+              : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-black"
+          }`}
         >
           <FiSend size={18} />
         </button>

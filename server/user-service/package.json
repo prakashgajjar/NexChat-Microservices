@@ -8,26 +8,28 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "*",
-    "dotenv": "*",
-    "cors": "*",
-    "helmet": "*",
-    "morgan": "*",
-    "express-async-errors": "*",
-    "socket.io": "*",
-    "jsonwebtoken": "*",
     "axios": "*",
+    "cookie-parser": "^1.4.7",
+    "cookieparser": "^0.1.0",
+    "cors": "*",
+    "dotenv": "*",
+    "express": "*",
+    "express-async-errors": "*",
+    "helmet": "*",
+    "joi": "*",
+    "jsonwebtoken": "*",
     "mongoose": "*",
-    "redis": "*",
-    "uuid": "*",
-    "tweetnacl": "*",
+    "morgan": "*",
     "node-forge": "*",
-    "winston": "*",
-    "joi": "*"
+    "redis": "*",
+    "socket.io": "*",
+    "tweetnacl": "*",
+    "uuid": "*",
+    "winston": "*"
   },
   "devDependencies": {
-    "nodemon": "*",
     "eslint": "*",
+    "nodemon": "*",
     "prettier": "*"
   }
 }

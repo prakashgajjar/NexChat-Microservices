@@ -4,6 +4,7 @@ const Message = new mongoose.Schema({
   messageId: { type: String, unique: true },
   chatId: { type: String, required: true },
   senderId: { type: String, required: true },
+  receiverId: { type: String, required: true },
 
   // End-to-end encrypted content
   cipherText: { type: String, required: true },

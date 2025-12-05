@@ -4,7 +4,7 @@ import messageSend from "../controllers/messageSend.controller.js";
 
 const router = express.Router();
 
-router.get("/get/:chatId", getMessages);
+router.get("/get/:receiverId", getMessages);
 router.post("/send", messageSend);
 
 export default router;

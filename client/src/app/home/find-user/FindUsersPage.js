@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Search, Users } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
+
 export default function FindUsersPage() {
   const { theme } = useTheme();  // light | dark | system
   const [search, setSearch] = useState("");
@@ -19,6 +20,7 @@ export default function FindUsersPage() {
       } catch (err) {
         console.error("Failed to load users:", err);
       }
+      // await GetUserId();
     }
     loadUsers();
   }, []);

@@ -5,6 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 import { getAllUsers } from "@/services/user/user.service.js";
 import { useAppContext } from "@/context/AppContext.context.js";
 
+
 export default function ChatList() {
   const { theme } = useTheme();
   const { selectedUser, setSelectedUser } = useAppContext();
@@ -18,6 +19,7 @@ export default function ChatList() {
         const res = await getAllUsers();
         console.log(res);
         setUsers(res);
+
       } catch (error) {
         console.log(error.message);
       }
@@ -72,7 +74,9 @@ export default function ChatList() {
       {/* Users List */}
       <div className="overflow-y-auto flex-1">
         {users.length === 0 && (
-          <div className="text-center text-gray-500 py-6 text-sm">No users found</div>
+          <div className="text-center text-gray-500 py-6 text-sm">
+            No users found
+          </div>
         )}
 
         {users.map((u) => {
@@ -97,7 +101,11 @@ export default function ChatList() {
               {/* Avatar */}
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow 
-                  ${isSelected ? "bg-blue-600 text-white" : "bg-blue-500 text-white"}
+                  ${
+                    isSelected
+                      ? "bg-blue-600 text-white"
+                      : "bg-blue-500 text-white"
+                  }
                 `}
               >
                 {u.username?.charAt(0)?.toUpperCase()}
