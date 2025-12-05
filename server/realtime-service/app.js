@@ -1,10 +1,14 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import dotenv from "dotenv";
+
+const PATH =  "../../.env" ;
+dotenv.config({ path:PATH});
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "http://localhost:3000" } });
 
 const onlineUsers = new Map();
 
@@ -31,4 +35,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(6000, () => console.log("Realtime server on 6000"));
+const PORT = process.env.PORT_REALTIME || 5004;
+
+server.listen(PORT, () => console.log(`Realtime server on ${PORT}`));

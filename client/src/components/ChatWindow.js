@@ -1,5 +1,6 @@
 "use client";
 
+import { io } from "socket.io-client";
 import { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
@@ -18,6 +19,7 @@ function formatMessageTime(dateString) {
   });
 }
 
+let socket;
 // Format date section → "Today", "Yesterday", "05 Dec 2025"
 function getDateLabel(dateString) {
   const date = new Date(dateString);
@@ -45,6 +47,47 @@ export default function ChatWindow() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
+
+  // Auto-scroll
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 50);
+  };
+
+  //real time socket connection
+
+  useEffect(() => {
+    if (!currentUser?.userId) return;
+
+    const URL = process.env.NEXT_PUBLIC_BACKEND_URL_REALTIME;
+
+socket = io(URL, {
+  query: { userId: currentUser.userId },
+  transports: ["websocket"],
+});
+
+
+    // When receiver sends real-time message
+    socket.on("new-message", (data) => {
+      const formatted = {
+        id: Date.now(),
+        text: atob(data.cipherText),
+        senderId: data.senderId,
+        receiverId: data.receiverId,
+        createdAt: data.createdAt,
+        fromMe: data.senderId === currentUser.userId,
+      };
+
+      setMessages((prev) => [...prev, formatted]);
+      scrollToBottom();
+    });
+
+    return () => socket.disconnect();
+  }, [currentUser?.userId]);
 
   // Load messages whenever selected user changes
   useEffect(() => {
@@ -81,52 +124,58 @@ export default function ChatWindow() {
     };
   }, [selectedUser?.userId, currentUser?.userId]);
 
-  // Auto-scroll
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }, 50);
-  };
-
   // Send Message
   const handleSend = async () => {
-    if (!input.trim() || !currentUser) return;
+  if (!input.trim()) return;
 
-    const tempId = Date.now();
-    const tempMessage = {
-      id: tempId,
-      text: input,
-      createdAt: new Date().toISOString(),
-      fromMe: true,
-      senderId: currentUser.userId,
-    };
+  const messageText = input;
+  setInput("");
 
-    setMessages((prev) => [...prev, tempMessage]);
-    scrollToBottom();
+  const tempId = Date.now();
 
-    const messageText = input;
-    setInput("");
-
-    try {
-      const payload = {
-        recipientId: selectedUser.userId,
-        cipherText: btoa(messageText),
-        iv: btoa("iv"),
-        encryptedKey: btoa("key"),
-      };
-
-      const saved = await sendMessage(payload);
-
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
-      );
-    } catch (err) {
-      console.error("Send message failed:", err);
-    }
+  // Temporary UI message
+  const tempMessage = {
+    id: tempId,
+    text: messageText,
+    createdAt: new Date().toISOString(),
+    fromMe: true,
+    senderId: currentUser.userId,
   };
+
+  setMessages(prev => [...prev, tempMessage]);
+  scrollToBottom();
+
+  // Prepare encrypted payload
+  const payload = {
+    senderId: currentUser.userId,
+    receiverId: selectedUser.userId,
+    cipherText: btoa(messageText),
+    iv: btoa("iv"),
+    encryptedKey: btoa("key"),
+    createdAt: new Date().toISOString(),
+  };
+
+  // REALTIME — send instantly to receiver
+  socket.emit("send-message", payload);
+
+  // DB STORAGE — save message history
+  try {
+    const saved = await sendMessage({
+      recipientId: selectedUser.userId,
+      cipherText: payload.cipherText,
+      iv: payload.iv,
+      encryptedKey: payload.encryptedKey,
+    });
+
+    // Update temporary message ID to real DB ID
+    setMessages(prev =>
+      prev.map(msg => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
+    );
+  } catch (err) {
+    console.error("Failed saving message:", err);
+  }
+};
+
 
   // Avatar
   const avatarLetter = () =>
@@ -213,7 +262,7 @@ export default function ChatWindow() {
                     }`}
                   >
                     <div
-                      className={`px-3 py-2 mb-[2px] rounded-xl max-w-xs text-sm shadow 
+                      className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow 
       ${
         isMine
           ? theme === "dark"
@@ -226,7 +275,7 @@ export default function ChatWindow() {
     `}
                     >
                       <div className="flex items-end gap-2">
-                        <p className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                        <p className="whitespace-pre-wrap wrap-break-word flex-1 leading-relaxed">
                           {msg.text}
                         </p>
 
