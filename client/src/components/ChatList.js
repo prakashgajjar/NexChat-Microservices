@@ -46,7 +46,7 @@ export default function ChatList() {
         }`}
       >
         <h1
-          className={`text-3xl font-bold mb-2 bg-gradient-to-r ${
+          className={`text-3xl font-bold mb-2 bg-linear-to-r ${
             isDark ? "from-gray-300 to-gray-500" : "from-zinc-700 to-zinc-500"
           } text-transparent bg-clip-text`}
         >

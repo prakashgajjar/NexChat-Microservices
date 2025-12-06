@@ -6,14 +6,14 @@ import jwt from "jsonwebtoken";
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otp, username, password } = req.body;
-    console.log(email, otp, username, password);
-    if (!email || !otp || !username || !password) {
+    const { email, otp, fullname, password } = req.body;
+    console.log(email, otp, fullname, password);
+    if (!email || !otp || !fullname || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
     // console.log(contact, otp, username, password);
     const storedOtp = await redis.get(`otp:${email}`);
-    // console.log("stored otp", storedOtp);
+    console.log("stored otp", storedOtp);
 
     if (!storedOtp) {
       return res.status(400).json({ message: "expired OTP" });
@@ -37,7 +37,7 @@ export const verifyOtp = async (req, res) => {
         data: {
           userId: user._id,
           email: email,
-          username,
+          fullname: fullname,
         },
       }
     );

@@ -82,7 +82,7 @@ export default function SignupPage() {
           <VerifyOtp
             email={email}
             password={password}
-            username={name}
+            fullname={name}
             onSuccess={handleOtpSuccess}
           />
         ) : (

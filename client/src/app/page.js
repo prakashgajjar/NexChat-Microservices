@@ -7,7 +7,7 @@ import { refreshToken } from "@/services/token/refreshToken.token.js";
 export default function App() {
 
 useEffect(() => {
-  console.log("useEffect running...");
+  // console.log("useEffect running...");
   refreshToken();
 }, []);
 

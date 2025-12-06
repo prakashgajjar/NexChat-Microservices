@@ -1,23 +1,23 @@
 import UserKeys from "../models/UserKeys.models.js";
 import { generateAllKeys } from "../utils/generateKeys.utils.js";
 import User from "../models/UserProfile.models.js";
+import { generateUsername } from "../utils/generateUsername.utils.js";
 
 export const storeUserData = async (req, res) => {
   try {
     const { data } = req.body;
 
     // Extract REQUIRED fields from incoming data
-    const { userId, email, username } = data;
+    const { userId, email, fullname } = data;
 
-    if (!userId || !email || !username) {
+    if (!userId || !email || !fullname) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields (userId, email, username)",
+        message: "Missing required fields (userId, email, fullname)",
       });
     }
 
-    console.log("Storing keys for:", { userId, email, username });
-
+    console.log("Storing keys for:", { userId, email, fullname });
     // Check if keys already exist
     const existingKeys = await UserKeys.findOne({ userId });
     const existingUser = await User.findOne({ userId });
@@ -33,11 +33,16 @@ export const storeUserData = async (req, res) => {
 
     let createdUser = null;
 
+    const username =
+      (await generateUsername(fullname)) ||
+      `user${Math.floor(1000 + Math.random() * 9000)}`;
+
     // Create a new user profile if not exists
     if (!existingUser) {
       createdUser = await User.create({
         userId,
         username,
+        fullname,
         email,
       });
 

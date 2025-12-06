@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { verifyOtp } from "@/services/auth/auth.service.js"; // <-- import your function
 
-export default function VerifyOtp({ email, password, username, onSuccess }) {
+export default function VerifyOtp({ email, password, fullname, onSuccess }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +34,7 @@ export default function VerifyOtp({ email, password, username, onSuccess }) {
     const response = await verifyOtp({
       email,
       otp,
-      username,
+      fullname,
       password,
     });
 

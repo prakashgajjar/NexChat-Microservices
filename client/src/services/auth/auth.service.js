@@ -44,3 +44,58 @@ export const loginUser = async (userData) => {
     throw err.response?.data || { message: "Login failed" };
   }
 };
+
+export const checkUsername = async (username) => {
+  try {
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL_USER}/api/user/username/check`,
+      { username },
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    // Return only useful data
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      available: res.data.available, 
+    };
+
+  } catch (err) {
+    // Standardize error output
+    return {
+      success: false,
+      message: err.response?.data?.message || "Username check failed",
+    };
+  }
+};
+
+export const setUsername = async (username) => {
+  try {
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL_USER}/api/user/username/set`,
+      { username },
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    // Return only useful data
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      available: res.data.available, 
+    };
+
+  } catch (err) {
+    // Standardize error output
+    return {
+      success: false,
+      message: err.response?.data?.message || "Username check failed",
+    };
+  }
+};
+
