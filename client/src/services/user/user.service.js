@@ -1,5 +1,8 @@
 // services/user.service.js
 
+import axios from "axios";
+import { Fetch } from "socket.io-client";
+
 const API_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL_USER || "http://localhost:5001";
 
@@ -40,6 +43,36 @@ export async function getUserProfile(userId) {
     throw err;
   }
 }
+export async function getUserProfileByUsername(username) {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/search/${username}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    console.log("getUserProfileByUsername response data:", data);
+
+    //If backend returns no users, DO NOT throw an error
+    if (!data.success && data.message === "No users found") {
+      return []; // return empty list
+    }
+
+    //If backend returns auth error or other error → return empty list instead of crash
+    if (!data.success) {
+      console.warn("Search backend returned error:", data.message);
+      return [];
+    }
+
+    return data.data || [];
+  } catch (err) {
+    console.error("getUserProfileByUsername error:", err);
+    return []; //never throw on search
+  }
+}
+
 
 export async function getUserPublicKey(userId) {
   try {

@@ -1,29 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Users, MessageCircle } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-
+import { getUserProfileByUsername } from "@/services/user/user.service.js";
+import { useRouter } from "next/navigation";
 
 export default function FindUsersPage() {
-  const { theme } = useTheme();  // light | dark | system
-  const [search, setSearch] = useState("");
-  const [users, setUsers] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const { theme } = useTheme();
+  const router = useRouter();
 
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // ⭐ Debounce Search — Wait 300ms
   useEffect(() => {
-    async function loadUsers() {
-      try {
-        const result = await getAllUsers();
-        setUsers(result);
-        setFiltered(result);
-      } catch (err) {
-        console.error("Failed to load users:", err);
-      }
-      // await GetUserId();
+    if (search.trim() === "") {
+      setResults([]);
+      return;
     }
-    loadUsers();
-  }, []);
+
+    const delay = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const data = await getUserProfileByUsername(search);
+        setResults(data);
+      } catch (err) {
+        console.error("Search error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search]);
 
   return (
     <div
@@ -51,6 +62,7 @@ export default function FindUsersPage() {
         {/* Search Bar */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+
           <input
             type="text"
             placeholder="Search users..."
@@ -64,37 +76,55 @@ export default function FindUsersPage() {
           />
         </div>
 
-        {/* User List */}
+        {/* Results */}
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p className="text-center py-10 text-lg opacity-60">Searching...</p>
+          ) : results.length === 0 ? (
             <p className="text-center py-10 text-lg opacity-60">
-              No matching users found
+              No users found
             </p>
           ) : (
-            filtered.map((u) => (
-              <button
-                key={u._id}
-                className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 shadow-sm ${
+            results.map((u) => (
+              <div
+                key={u?._id}
+                className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
                   theme === "dark"
                     ? "bg-zinc-800/80 border-zinc-700 hover:bg-zinc-700/70 hover:border-gray-600"
                     : "bg-white border-gray-300 hover:bg-gray-200"
                 }`}
               >
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold shadow-inner ${
-                    theme === "dark"
-                      ? "bg-gradient-to-br from-zinc-700 to-zinc-600 text-gray-200"
-                      : "bg-gray-200 text-black"
-                  }`}
-                >
-                  {u.name.charAt(0).toUpperCase()}
+                {/* LEFT: Avatar + name */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-semibold shadow-inner ${
+                      theme === "dark"
+                        ? "bg-gradient-to-br from-zinc-700 to-zinc-600 text-gray-200"
+                        : "bg-gray-200 text-black"
+                    }`}
+                  >
+                    {u.username?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+
+                  <div className="text-left">
+                    <p className="font-semibold text-lg">{u?.username}</p>
+                    <p className="text-sm opacity-70">{u?.fullname}</p>
+                  </div>
                 </div>
 
-                <div className="text-left">
-                  <p className="font-semibold text-lg">{u.name}</p>
-                  <p className="text-sm opacity-70">{u.email}</p>
-                </div>
-              </button>
+                {/* RIGHT: Message Button */}
+                <button
+                  onClick={() => router.push(`/home?id=${u.userId}`)}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition ${
+                    theme === "dark"
+                      ? "bg-blue-600 hover:bg-blue-500 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Message
+                </button>
+              </div>
             ))
           )}
         </div>

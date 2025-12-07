@@ -28,5 +28,5 @@ app.use("/api/keys", storeKeys);
 app.use("/api/user", verifyToken , userRoutes);
 
 app.listen(process.env.PORT_USER, () =>
-  console.log(`Auth service running on port ${process.env.PORT_USER}`)
+  console.log(`user service running on port ${process.env.PORT_USER}`)
 );
