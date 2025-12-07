@@ -1,31 +1,63 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import { useTheme } from "../context/ThemeContext";
 import { getAllUsers } from "@/services/user/user.service.js";
 import { useAppContext } from "@/context/AppContext.context.js";
 
+let socket;
 
 export default function ChatList() {
   const { theme } = useTheme();
-  const { selectedUser, setSelectedUser } = useAppContext();
+  const { selectedUser, setSelectedUser, currentUser } = useAppContext();
+
   const [users, setUsers] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   const isDark = theme === "dark";
 
+  // 📌 Load all users ONCE
   useEffect(() => {
     async function loadUsers() {
       try {
         const res = await getAllUsers();
-        console.log(res);
         setUsers(res);
-
       } catch (error) {
         console.log(error.message);
       }
     }
     loadUsers();
   }, []);
+
+  // 📌 Real-time Online/Offline Tracking
+  useEffect(() => {
+    if (!currentUser?.userId) return;
+
+    const URL = process.env.NEXT_PUBLIC_BACKEND_URL_REALTIME;
+
+    socket = io(URL, {
+      transports: ["websocket"],
+      query: { userId: currentUser.userId },
+    });
+
+    // Initial full list of online users
+    socket.on("online-users", (list) => {
+      setOnlineUsers(list);
+    });
+
+    // Someone comes online
+    socket.on("user-online", (userId) => {
+      setOnlineUsers((prev) => [...new Set([...prev, userId])]);
+    });
+
+    // Someone goes offline
+    socket.on("user-offline", (userId) => {
+      setOnlineUsers((prev) => prev.filter((id) => id !== userId));
+    });
+
+    return () => socket.disconnect();
+  }, [currentUser?.userId]);
 
   return (
     <div
@@ -81,11 +113,12 @@ export default function ChatList() {
 
         {users.map((u) => {
           const isSelected = selectedUser?._id === u._id;
+          const isOnlineNow = onlineUsers.includes(u.userId);
 
           return (
             <div
               key={u._id}
-              onClick={() => setSelectedUser(u)} // ✅ select full user
+              onClick={() => setSelectedUser(u)}
               className={`flex items-center gap-3 p-3 border-b border-gray-700/20 cursor-pointer transition-all
                 ${
                   isSelected
@@ -98,17 +131,24 @@ export default function ChatList() {
                 }
               `}
             >
-              {/* Avatar */}
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow 
-                  ${
-                    isSelected
-                      ? "bg-blue-600 text-white"
-                      : "bg-blue-500 text-white"
-                  }
-                `}
-              >
-                {u.username?.charAt(0)?.toUpperCase()}
+              {/* Avatar with ONLINE DOT */}
+              <div className="relative">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow 
+                    ${
+                      isSelected
+                        ? "bg-blue-600 text-white"
+                        : "bg-blue-500 text-white"
+                    }
+                  `}
+                >
+                  {u.username?.charAt(0)?.toUpperCase()}
+                </div>
+
+                {/* Green Dot */}
+                {isOnlineNow && (
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                )}
               </div>
 
               {/* User Info */}

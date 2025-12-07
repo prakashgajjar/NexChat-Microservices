@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { checkUsername, setUsername } from "@/services/auth/auth.service";
 import { AuthLoader } from "@/components/Auth/AuthLoader";
 
@@ -10,8 +10,14 @@ export default function UsernamePage({ onSuccess }) {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
   const [available, setAvailable] = useState(null);
+  const [showSkip, setShowSkip] = useState(false);
 
-  // Same rule as backend
+  // ⭐ Skip button appears after 1 second
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSkip(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const validate = (name) => /^[A-Za-z0-9._]{6,20}$/.test(name);
 
   const handleCheck = async (e) => {
@@ -51,15 +57,28 @@ export default function UsernamePage({ onSuccess }) {
       return;
     }
 
-    // Callback + redirect
     onSuccess?.(usernameState);
-    window.location.href = "/auth/signup?username=" + usernameState;
+    window.location.href = "/home";
+  };
+
+  const handleSkip = () => {
+    window.location.href = "/home";
   };
 
   return (
     <div className="relative min-h-screen bg-linear-to-r from-black to-zinc-800 flex items-center justify-center px-4 text-white">
-      
-      {/* Global loader when saving username */}
+
+      {/*Skip */}
+      {showSkip && (
+        <button
+          onClick={handleSkip}
+          className="absolute top-4 right-4 text-sm bg-neutral-800/70 border border-neutral-600 px-4 py-2 rounded-lg hover:bg-neutral-700 transition-all shadow-md"
+        >
+          Skip →
+        </button>
+      )}
+
+
       {loading && (
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
           <AuthLoader />
@@ -91,7 +110,6 @@ export default function UsernamePage({ onSuccess }) {
             }}
           />
 
-          {/* Button text changes based on state */}
           <button
             type="submit"
             disabled={checking}
@@ -101,7 +119,6 @@ export default function UsernamePage({ onSuccess }) {
           </button>
         </form>
 
-        {/* Status Message */}
         {available === true && (
           <p className="text-green-400 mt-4 text-center">✔ Username is available</p>
         )}
@@ -110,10 +127,8 @@ export default function UsernamePage({ onSuccess }) {
           <p className="text-red-400 mt-4 text-center">✖ Username already taken</p>
         )}
 
-        {/* Error */}
         {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
 
-        {/* Continue Button */}
         {available === true && (
           <button
             onClick={handleContinue}

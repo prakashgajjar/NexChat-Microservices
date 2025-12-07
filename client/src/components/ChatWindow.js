@@ -20,7 +20,7 @@ function formatMessageTime(dateString) {
 }
 
 let socket;
-// Format date section → "Today", "Yesterday", "05 Dec 2025"
+// Format date section
 function getDateLabel(dateString) {
   const date = new Date(dateString);
   const today = new Date();
@@ -43,6 +43,7 @@ function getDateLabel(dateString) {
 export default function ChatWindow() {
   const { theme } = useTheme();
   const { selectedUser, currentUser } = useAppContext();
+  const [isOnline, setIsOnline] = useState(false);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -65,11 +66,10 @@ export default function ChatWindow() {
 
     const URL = process.env.NEXT_PUBLIC_BACKEND_URL_REALTIME;
 
-socket = io(URL, {
-  query: { userId: currentUser.userId },
-  transports: ["websocket"],
-});
-
+    socket = io(URL, {
+      query: { userId: currentUser.userId },
+      transports: ["websocket"],
+    });
 
     // When receiver sends real-time message
     socket.on("new-message", (data) => {
@@ -86,8 +86,21 @@ socket = io(URL, {
       scrollToBottom();
     });
 
+    socket.on("user-online", (onlineUserId) => {
+      if (selectedUser?.userId === onlineUserId) setIsOnline(true);
+    });
+
+    socket.on("user-offline", (offlineUserId) => {
+      if (selectedUser?.userId === offlineUserId) setIsOnline(false);
+    });
+
+    socket.on("online-users", (list) => {
+      if (list.includes(selectedUser?.userId)) setIsOnline(true);
+      else setIsOnline(false);
+    });
+
     return () => socket.disconnect();
-  }, [currentUser?.userId]);
+  }, [currentUser?.userId, selectedUser?.userId]);
 
   // Load messages whenever selected user changes
   useEffect(() => {
@@ -124,58 +137,58 @@ socket = io(URL, {
     };
   }, [selectedUser?.userId, currentUser?.userId]);
 
+
   // Send Message
   const handleSend = async () => {
-  if (!input.trim()) return;
+    if (!input.trim()) return;
 
-  const messageText = input;
-  setInput("");
+    const messageText = input;
+    setInput("");
 
-  const tempId = Date.now();
+    const tempId = Date.now();
 
-  // Temporary UI message
-  const tempMessage = {
-    id: tempId,
-    text: messageText,
-    createdAt: new Date().toISOString(),
-    fromMe: true,
-    senderId: currentUser.userId,
+    // Temporary UI message
+    const tempMessage = {
+      id: tempId,
+      text: messageText,
+      createdAt: new Date().toISOString(),
+      fromMe: true,
+      senderId: currentUser.userId,
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+    scrollToBottom();
+
+    // Prepare encrypted payload
+    const payload = {
+      senderId: currentUser.userId,
+      receiverId: selectedUser.userId,
+      cipherText: btoa(messageText),
+      iv: btoa("iv"),
+      encryptedKey: btoa("key"),
+      createdAt: new Date().toISOString(),
+    };
+
+    // REALTIME — send instantly to receiver
+    socket.emit("send-message", payload);
+
+    // DB STORAGE — save message history
+    try {
+      const saved = await sendMessage({
+        recipientId: selectedUser.userId,
+        cipherText: payload.cipherText,
+        iv: payload.iv,
+        encryptedKey: payload.encryptedKey,
+      });
+
+      // Update temporary message ID to real DB ID
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
+      );
+    } catch (err) {
+      console.error("Failed saving message:", err);
+    }
   };
-
-  setMessages(prev => [...prev, tempMessage]);
-  scrollToBottom();
-
-  // Prepare encrypted payload
-  const payload = {
-    senderId: currentUser.userId,
-    receiverId: selectedUser.userId,
-    cipherText: btoa(messageText),
-    iv: btoa("iv"),
-    encryptedKey: btoa("key"),
-    createdAt: new Date().toISOString(),
-  };
-
-  // REALTIME — send instantly to receiver
-  socket.emit("send-message", payload);
-
-  // DB STORAGE — save message history
-  try {
-    const saved = await sendMessage({
-      recipientId: selectedUser.userId,
-      cipherText: payload.cipherText,
-      iv: payload.iv,
-      encryptedKey: payload.encryptedKey,
-    });
-
-    // Update temporary message ID to real DB ID
-    setMessages(prev =>
-      prev.map(msg => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
-    );
-  } catch (err) {
-    console.error("Failed saving message:", err);
-  }
-};
-
 
   // Avatar
   const avatarLetter = () =>
@@ -219,7 +232,18 @@ socket = io(URL, {
         >
           {avatarLetter()}
         </div>
-        <p className="font-semibold">{selectedUser.username}</p>
+        <div className="flex flex-col">
+          <p className="font-semibold">{selectedUser.username}</p>
+
+          {/* ONLINE / OFFLINE */}
+          <span
+            className={`text-xs ${
+              isOnline ? "text-green-400" : "text-gray-400"
+            }`}
+          >
+            {isOnline ? "Online" : "Offline"}
+          </span>
+        </div>
       </header>
 
       {/* CHAT MESSAGES */}

@@ -27,7 +27,8 @@ export default function SignupPage() {
 
   const nameError = name.length < 2 ? "Name must be at least 2 characters" : "";
   const emailError = !validateEmail(email) ? "Invalid email format" : "";
-  const passwordError = password.length < 6 ? "Password must be at least 6 characters" : "";
+  const passwordError =
+    password.length < 6 ? "Password must be at least 6 characters" : "";
   const confirmError = confirm !== password ? "Passwords do not match" : "";
 
   const isValid =
@@ -46,7 +47,9 @@ export default function SignupPage() {
 
     try {
       const res = await getOtp({ email });
-      setShowOtp(true);
+      if (res) {
+        setShowOtp(true);
+      }
     } catch (err) {
       setServerError(err.message || "Failed to send OTP");
     } finally {
@@ -55,22 +58,22 @@ export default function SignupPage() {
   };
 
   const handleOtpSuccess = () => {
-    window.location.href = "/home";
+    window.location.href = "/username";
   };
 
   return (
     <div className="relative min-h-screen bg-linear-to-r from-black to-zinc-800 flex items-center justify-center px-4 text-white">
-
       {/* Auth Loader Overlay */}
       {loading && (
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <AuthLoader />   {/* <-- USED HERE */}
+          <AuthLoader /> {/* <-- USED HERE */}
         </div>
       )}
 
-      <div className="w-full max-w-md bg-neutral-900/60 backdrop-blur-md 
-        p-8 rounded-2xl border border-neutral-700 shadow-xl">
-
+      <div
+        className="w-full max-w-md bg-neutral-900/60 backdrop-blur-md 
+        p-8 rounded-2xl border border-neutral-700 shadow-xl"
+      >
         {/* Branding */}
         <h1 className="text-center text-4xl font-extrabold mb-2 bg-linear-to-r from-gray-800 to-blue-100 text-transparent bg-clip-text">
           NexChat
@@ -87,7 +90,6 @@ export default function SignupPage() {
           />
         ) : (
           <form onSubmit={handleSignup} className="space-y-5">
-
             {/* NAME */}
             <div>
               <input
@@ -167,14 +169,16 @@ export default function SignupPage() {
             >
               {loading ? "Sending OTP…" : "Create Account"}
             </button>
-
           </form>
         )}
 
         {/* Footer */}
         <p className="text-center mt-6 text-neutral-400">
           Already have an account?{" "}
-          <Link href="/" className="text-blue-400 underline hover:text-blue-300">
+          <Link
+            href="/"
+            className="text-blue-400 underline hover:text-blue-300"
+          >
             Login
           </Link>
         </p>
