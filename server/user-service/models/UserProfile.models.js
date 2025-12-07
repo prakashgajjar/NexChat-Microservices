@@ -24,13 +24,10 @@ const UserSchema = new mongoose.Schema({
     },
   },
 
-  contacts: [
-    {
-      userId: String,
-      savedName: String,
-      addedAt: { type: Date, default: Date.now },
-    },
-  ],
+  contacts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }],
 
   // SETTINGS
   settings: {

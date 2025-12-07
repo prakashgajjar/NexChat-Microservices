@@ -4,6 +4,7 @@ import cors from "cors";
 import  connectDB  from "./configs/db.config.js";
 import storeKeys from "./routes/storeKeys.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import servicesRoutes from "./routes/services.routes.js";
 import { verifyToken } from "./middleware/verifyToken.js";
 import cookieParser from "cookie-parser";
 
@@ -26,6 +27,7 @@ connectDB();
 
 app.use("/api/keys", storeKeys);
 app.use("/api/user", verifyToken , userRoutes);
+app.use("/api/services", servicesRoutes);
 
 app.listen(process.env.PORT_USER, () =>
   console.log(`user service running on port ${process.env.PORT_USER}`)

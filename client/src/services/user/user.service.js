@@ -6,15 +6,17 @@ import { Fetch } from "socket.io-client";
 const API_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL_USER || "http://localhost:5001";
 
-export async function getAllUsers() {
+export async function getContacts() {
   try {
-    const res = await fetch(`${API_BASE}/api/user/all`,{
+    const res = await fetch(`${API_BASE}/api/user/contacts/get`,{
       credentials: "include",
+      method: "POST", 
       headers:{
         "Content-Type": "application/json",
       }
     });
     const data = await res.json();
+    console.log("getContacts response data:", data.data);  
 
     if (!data.success) throw new Error(data.message);
 
