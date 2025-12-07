@@ -5,19 +5,27 @@ import { io } from "socket.io-client";
 import { useTheme } from "../context/ThemeContext";
 import { getAllUsers } from "@/services/user/user.service.js";
 import { useAppContext } from "@/context/AppContext.context.js";
+import { useSearchParams, useRouter } from "next/navigation";
 
 let socket;
 
 export default function ChatList() {
   const { theme } = useTheme();
   const { selectedUser, setSelectedUser, currentUser } = useAppContext();
+  const router = useRouter();
 
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const isDark = theme === "dark";
 
-  // 📌 Load all users ONCE
+  // ⭐ Read ID from URL query
+  const searchParams = useSearchParams();
+  const userIdFromURL = searchParams.get("id");
+
+  /* ----------------------------------------------------
+     LOAD ALL USERS ONCE
+  ---------------------------------------------------- */
   useEffect(() => {
     async function loadUsers() {
       try {
@@ -30,7 +38,22 @@ export default function ChatList() {
     loadUsers();
   }, []);
 
-  // 📌 Real-time Online/Offline Tracking
+  /* ----------------------------------------------------
+     AUTO-SELECT USER FROM URL WHEN USERS LOADED
+  ---------------------------------------------------- */
+  useEffect(() => {
+    if (!userIdFromURL || users.length === 0) return;
+
+    const found = users.find((u) => u.userId === userIdFromURL);
+
+    if (found) {
+      setSelectedUser(found);
+    }
+  }, [userIdFromURL, users]);
+
+  /* ----------------------------------------------------
+     REAL-TIME ONLINE / OFFLINE TRACKING
+  ---------------------------------------------------- */
   useEffect(() => {
     if (!currentUser?.userId) return;
 
@@ -41,17 +64,14 @@ export default function ChatList() {
       query: { userId: currentUser.userId },
     });
 
-    // Initial full list of online users
     socket.on("online-users", (list) => {
       setOnlineUsers(list);
     });
 
-    // Someone comes online
     socket.on("user-online", (userId) => {
       setOnlineUsers((prev) => [...new Set([...prev, userId])]);
     });
 
-    // Someone goes offline
     socket.on("user-offline", (userId) => {
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     });
@@ -69,7 +89,7 @@ export default function ChatList() {
         }
       `}
     >
-      {/* Header */}
+      {/* HEADER */}
       <div
         className={`p-4 border-b ${
           isDark
@@ -89,7 +109,6 @@ export default function ChatList() {
           End-to-end encrypted distributed chat
         </p>
 
-        {/* Search */}
         <input
           type="text"
           placeholder="Search"
@@ -103,7 +122,7 @@ export default function ChatList() {
         />
       </div>
 
-      {/* Users List */}
+      {/* USER LIST */}
       <div className="overflow-y-auto flex-1">
         {users.length === 0 && (
           <div className="text-center text-gray-500 py-6 text-sm">
@@ -112,13 +131,16 @@ export default function ChatList() {
         )}
 
         {users.map((u) => {
-          const isSelected = selectedUser?._id === u._id;
+          const isSelected = selectedUser?.userId === u.userId;
           const isOnlineNow = onlineUsers.includes(u.userId);
 
           return (
             <div
               key={u._id}
-              onClick={() => setSelectedUser(u)}
+              onClick={() => {
+                setSelectedUser(u);
+                router.replace(`/home?id=${u.userId}`); // ⭐ UPDATE URL
+              }}
               className={`flex items-center gap-3 p-3 border-b border-gray-700/20 cursor-pointer transition-all
                 ${
                   isSelected
@@ -131,7 +153,7 @@ export default function ChatList() {
                 }
               `}
             >
-              {/* Avatar with ONLINE DOT */}
+              {/* Avatar + Online Dot */}
               <div className="relative">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shadow 
@@ -145,9 +167,8 @@ export default function ChatList() {
                   {u.username?.charAt(0)?.toUpperCase()}
                 </div>
 
-                {/* Green Dot */}
                 {isOnlineNow && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                 )}
               </div>
 

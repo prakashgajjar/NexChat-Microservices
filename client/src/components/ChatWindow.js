@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext.context.js";
+import { useSearchParams } from "next/navigation";
+import { getUserProfile } from "@/services/user/user.service.js";
 import {
   sendMessage,
   getMessages,
@@ -19,19 +21,14 @@ function formatMessageTime(dateString) {
   });
 }
 
-let socket;
-// Format date section
 function getDateLabel(dateString) {
   const date = new Date(dateString);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  const isToday = date.toDateString() === today.toDateString();
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-
-  if (isToday) return "Today";
-  if (isYesterday) return "Yesterday";
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
 
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -40,16 +37,19 @@ function getDateLabel(dateString) {
   });
 }
 
+let socket;
+
 export default function ChatWindow() {
   const { theme } = useTheme();
-  const { selectedUser, currentUser } = useAppContext();
-  const [isOnline, setIsOnline] = useState(false);
+  const { selectedUser, setSelectedUser, currentUser } = useAppContext();
+  const searchParams = useSearchParams();
+  const userIdFromURL = searchParams.get("id");
 
+  const [isOnline, setIsOnline] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
 
-  // Auto-scroll
   const scrollToBottom = () => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({
@@ -59,7 +59,22 @@ export default function ChatWindow() {
     }, 50);
   };
 
-  //real time socket connection
+
+  useEffect(() => {
+    async function loadUserFromURL() {
+      if (!selectedUser && userIdFromURL) {
+        try {
+          const user = await getUserProfile(userIdFromURL);
+          setSelectedUser(user);
+        } catch (err) {
+          console.log("Could not load user from URL:", err);
+        }
+      }
+    }
+
+    loadUserFromURL();
+  }, [userIdFromURL, selectedUser]);
+
 
   useEffect(() => {
     if (!currentUser?.userId) return;
@@ -71,7 +86,6 @@ export default function ChatWindow() {
       transports: ["websocket"],
     });
 
-    // When receiver sends real-time message
     socket.on("new-message", (data) => {
       const formatted = {
         id: Date.now(),
@@ -95,23 +109,25 @@ export default function ChatWindow() {
     });
 
     socket.on("online-users", (list) => {
-      if (list.includes(selectedUser?.userId)) setIsOnline(true);
+      if (selectedUser?.userId && list.includes(selectedUser.userId))
+        setIsOnline(true);
       else setIsOnline(false);
     });
 
     return () => socket.disconnect();
   }, [currentUser?.userId, selectedUser?.userId]);
 
-  // Load messages whenever selected user changes
+
   useEffect(() => {
-    if (!selectedUser?.userId || !currentUser?.userId) return;
+    const userToLoad = selectedUser?.userId || userIdFromURL;
+    if (!userToLoad || !currentUser?.userId) return;
 
     let isMounted = true;
 
-    async function loadMessages() {
+    async function loadMessagesNow() {
       try {
-        setMessages([]); // Clear old chat instantly
-        const msgs = await getMessages(selectedUser.userId);
+        setMessages([]);
+        const msgs = await getMessages(userToLoad);
 
         if (!isMounted) return;
 
@@ -125,29 +141,30 @@ export default function ChatWindow() {
         }));
 
         setMessages(formatted);
+        scrollToBottom();
       } catch (err) {
         console.error("Load messages error:", err);
       }
     }
 
-    loadMessages();
-
+    loadMessagesNow();
     return () => {
       isMounted = false;
     };
-  }, [selectedUser?.userId, currentUser?.userId]);
+  }, [selectedUser?.userId, userIdFromURL, currentUser?.userId]);
 
 
-  // Send Message
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    const userToSend = selectedUser?.userId || userIdFromURL;
+    if (!userToSend) return;
 
     const messageText = input;
     setInput("");
 
     const tempId = Date.now();
 
-    // Temporary UI message
     const tempMessage = {
       id: tempId,
       text: messageText,
@@ -159,29 +176,25 @@ export default function ChatWindow() {
     setMessages((prev) => [...prev, tempMessage]);
     scrollToBottom();
 
-    // Prepare encrypted payload
     const payload = {
       senderId: currentUser.userId,
-      receiverId: selectedUser.userId,
+      receiverId: userToSend,
       cipherText: btoa(messageText),
       iv: btoa("iv"),
       encryptedKey: btoa("key"),
       createdAt: new Date().toISOString(),
     };
 
-    // REALTIME — send instantly to receiver
     socket.emit("send-message", payload);
 
-    // DB STORAGE — save message history
     try {
       const saved = await sendMessage({
-        recipientId: selectedUser.userId,
+        recipientId: userToSend,
         cipherText: payload.cipherText,
         iv: payload.iv,
         encryptedKey: payload.encryptedKey,
       });
 
-      // Update temporary message ID to real DB ID
       setMessages((prev) =>
         prev.map((msg) => (msg.id === tempId ? { ...msg, id: saved._id } : msg))
       );
@@ -190,12 +203,11 @@ export default function ChatWindow() {
     }
   };
 
-  // Avatar
+
   const avatarLetter = () =>
     selectedUser?.username?.charAt(0)?.toUpperCase() || "?";
 
-  // Default screen when no user selected
-  if (!selectedUser) {
+  if (!selectedUser && !userIdFromURL) {
     return (
       <div
         className={`flex-1 flex flex-col items-center justify-center text-center ${
@@ -207,11 +219,13 @@ export default function ChatWindow() {
         <div className="text-5xl mb-4">💬</div>
         <h2 className="text-3xl font-semibold">NexChat</h2>
         <p className="opacity-70 mt-2 text-sm">
-          End-to-end encrypted. Select a user to start a conversation.
+          Select a user to start a conversation.
         </p>
       </div>
     );
   }
+
+  const activeUser = selectedUser || {};
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -230,12 +244,11 @@ export default function ChatWindow() {
               : "bg-gray-200 text-gray-700"
           }`}
         >
-          {avatarLetter()}
+          {activeUser.username?.charAt(0)?.toUpperCase() || "?"}
         </div>
         <div className="flex flex-col">
-          <p className="font-semibold">{selectedUser.username}</p>
+          <p className="font-semibold">{activeUser.username}</p>
 
-          {/* ONLINE / OFFLINE */}
           <span
             className={`text-xs ${
               isOnline ? "text-green-400" : "text-gray-400"
@@ -246,74 +259,66 @@ export default function ChatWindow() {
         </div>
       </header>
 
-      {/* CHAT MESSAGES */}
+      {/* MESSAGES */}
       <div
         ref={scrollRef}
         className={`flex-1 overflow-y-auto px-6 py-4 space-y-3 ${
           theme === "dark" ? "bg-zinc-900" : "bg-gray-50"
         }`}
       >
-        {/** WhatsApp Style Date Separator */}
-        {(() => {
-          // Group messages by date label
-          const grouped = messages.reduce((acc, msg) => {
-            const dateLabel = getDateLabel(msg.createdAt);
-            if (!acc[dateLabel]) acc[dateLabel] = [];
-            acc[dateLabel].push(msg);
+        {Object.entries(
+          messages.reduce((acc, msg) => {
+            const label = getDateLabel(msg.createdAt);
+            if (!acc[label]) acc[label] = [];
+            acc[label].push(msg);
             return acc;
-          }, {});
+          }, {})
+        ).map(([label, msgs]) => (
+          <div key={label}>
+            <div className="text-center my-3">
+              <span
+                className={`px-3 py-1 rounded-full text-xs ${
+                  theme === "dark"
+                    ? "bg-zinc-800 text-gray-300"
+                    : "bg-gray-300 text-gray-700"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
 
-          return Object.entries(grouped).map(([dateLabel, msgs]) => (
-            <div key={dateLabel}>
-              <div className="text-center my-3">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    theme === "dark"
-                      ? "bg-zinc-800 text-gray-300"
-                      : "bg-gray-300 text-gray-700"
+            {msgs.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.fromMe ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow ${
+                    msg.fromMe
+                      ? theme === "dark"
+                        ? "bg-zinc-700 text-white"
+                        : "bg-zinc-300 text-black"
+                      : theme === "dark"
+                      ? "bg-zinc-800 border border-zinc-700 text-gray-100"
+                      : "bg-white border border-gray-300"
                   }`}
                 >
-                  {dateLabel}
-                </span>
-              </div>
-              {msgs.map((msg) => {
-                const isMine = msg.fromMe;
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      isMine ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow 
-      ${
-        isMine
-          ? theme === "dark"
-            ? "bg-zinc-700 text-white"
-            : "bg-zinc-300 text-black"
-          : theme === "dark"
-          ? "bg-zinc-800 border border-zinc-700 text-gray-100"
-          : "bg-white border border-gray-300"
-      }
-    `}
-                    >
-                      <div className="flex items-end gap-2">
-                        <p className="whitespace-pre-wrap wrap-break-word flex-1 leading-relaxed">
-                          {msg.text}
-                        </p>
+                  <div className="flex items-end gap-2">
+                    <p className="whitespace-pre-wrap wrap-break-word flex-1 leading-relaxed">
+                      {msg.text}
+                    </p>
 
-                        <span className="text-[10px] opacity-70 min-w-fit">
-                          {formatMessageTime(msg.createdAt)}
-                        </span>
-                      </div>
-                    </div>
+                    <span className="text-[10px] opacity-70 min-w-fit">
+                      {formatMessageTime(msg.createdAt)}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          ));
-        })()}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
 
       {/* INPUT BAR */}
