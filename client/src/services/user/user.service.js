@@ -29,7 +29,7 @@ export async function getContacts() {
 
 export async function getUserProfile(userId) {
   try {
-    const res = await fetch(`${API_BASE}/user/${userId}`,{
+    const res = await fetch(`${API_BASE}/api/user/id/${userId}`,{
       credentials: "include",
       headers:{
         "Content-Type": "application/json",

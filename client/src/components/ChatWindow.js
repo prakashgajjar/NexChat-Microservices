@@ -65,6 +65,7 @@ export default function ChatWindow() {
       if (!selectedUser && userIdFromURL) {
         try {
           const user = await getUserProfile(userIdFromURL);
+          console.log(user);
           setSelectedUser(user);
         } catch (err) {
           console.log("Could not load user from URL:", err);

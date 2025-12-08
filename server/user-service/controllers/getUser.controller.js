@@ -2,7 +2,7 @@ import User from "../models/UserProfile.models.js";
 
 const getUser = async (req, res) => {
   try {
-    const  userId  = req.user;
+    const  userId  = req.params.userId;
     const user = await User.findOne({ userId }).lean();
 
     if (!user)

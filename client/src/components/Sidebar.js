@@ -41,7 +41,7 @@ export default function Sidebar() {
       {/* NEARBY CHATS */}
       <FiMapPin
         onClick={() => {
-          router.push("/home/find-user");
+          router.push("/home/near-me");
         }}
         className="text-2xl cursor-pointer hover:text-gray-400 transition"
       />

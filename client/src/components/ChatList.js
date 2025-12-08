@@ -137,7 +137,7 @@ export default function ChatList() {
                 setSelectedUser(u);
                 router.replace(`/home?id=${u.userId}`);
               }}
-              className={`flex items-center gap-3 p-3 border-b cursor-pointer transition-all
+              className={`flex items-center gap-3 p-3  cursor-pointer transition-all
               ${
                 isSelected
                   ? isDark
