@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
     accentColor: { type: String, default: "#3b82f6" },
     chatWallpaper: { type: String, default: "default" },
     fontSize: { type: String, default: "medium" },
+    chatBgUrl: { type: String, default: "" },
 
     // Chat bubble settings
     chatBubble: {

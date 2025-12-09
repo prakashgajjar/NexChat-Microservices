@@ -61,7 +61,6 @@ export const verifyOtp = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
@@ -75,6 +74,15 @@ export const verifyOtp = async (req, res) => {
       secure: true,
       sameSite: "none",
       maxAge: 30 * 60 * 1000,
+      path: "/",
+    });
+
+    const theme = user.ui?.theme || "light";
+    res.cookie("UUI_theme", theme, {
+      // httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 30 * 60 * 1000 * 365,
       path: "/",
     });
 

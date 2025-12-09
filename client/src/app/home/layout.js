@@ -1,14 +1,13 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext.context.js";
 import { useEffect } from "react";
 import { getMe } from "@/services/user/user.service.js";
 
-
 export default function RootLayout({ children }) {
-  const { setCurrentUser} = useAppContext();
+  const { setCurrentUser } = useAppContext();
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -20,19 +19,15 @@ export default function RootLayout({ children }) {
       }
     }
     fetchData();
-  }, [])
-  
+  }, []);
+
   return (
     <html lang="en">
-      <body
-        className={` antialiased`}
-      >
-        <ThemeProvider>
-          <div className="flex w-screen h-screen">
-            <Sidebar />
-            {children}
-          </div>
-        </ThemeProvider>
+      <body className={` antialiased`}>
+        <div className="flex w-screen h-screen">
+          <Sidebar />
+          {children}
+        </div>
       </body>
     </html>
   );

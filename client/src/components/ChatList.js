@@ -10,13 +10,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 let socket;
 
 export default function ChatList() {
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { selectedUser, setSelectedUser, currentUser } = useAppContext();
   const router = useRouter();
 
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [search, setSearch] = useState(""); 
+  const [search, setSearch] = useState("");
 
   const isDark = theme === "dark";
   const searchParams = useSearchParams();
@@ -75,11 +75,11 @@ export default function ChatList() {
     const q = search.toLowerCase();
 
     return (
-      name.includes(q) ||
-      username.includes(q) ||
-      ("@" + username).includes(q)
+      name.includes(q) || username.includes(q) || ("@" + username).includes(q)
     );
   });
+
+
 
   return (
     <div
@@ -168,9 +168,7 @@ export default function ChatList() {
               </div>
 
               <div className="flex-1">
-                <p className="font-semibold">
-                  {u.fullname || u.username}
-                </p>
+                <p className="font-semibold">{u.fullname || u.username}</p>
 
                 <p
                   className={`text-sm ${

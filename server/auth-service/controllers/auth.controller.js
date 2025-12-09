@@ -52,6 +52,15 @@ export const login = async (req, res) => {
       path: "/",
     });
 
+    const theme = user.ui?.theme || "light";
+    res.cookie("UUI_theme", theme, {
+      // httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 30 * 60 * 1000 * 365,
+      path: "/",
+    });
+
     return res.json({
       status: 200,
       userId: user._id,

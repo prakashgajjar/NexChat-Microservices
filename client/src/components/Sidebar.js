@@ -19,6 +19,7 @@ export default function Sidebar() {
 
   const router = useRouter();
 
+  
   return (
     <aside
       className={`
@@ -39,12 +40,6 @@ export default function Sidebar() {
       />
 
       {/* NEARBY CHATS */}
-      <FiMapPin
-        onClick={() => {
-          router.push("/home/near-me");
-        }}
-        className="text-2xl cursor-pointer hover:text-gray-400 transition"
-      />
 
       {/* FIND USER */}
       <FiSearch
