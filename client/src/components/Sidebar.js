@@ -19,7 +19,6 @@ export default function Sidebar() {
 
   const router = useRouter();
 
-  
   return (
     <aside
       className={`
@@ -68,7 +67,12 @@ export default function Sidebar() {
         )}
 
         {/* SETTINGS */}
-        <FiSettings className="text-2xl cursor-pointer hover:text-gray-400 transition" />
+        <FiSettings
+          className="text-2xl cursor-pointer hover:text-gray-400 transition"
+          onClick={() => {
+            router.push("/home/setting");
+          }}
+        />
       </div>
     </aside>
   );

@@ -1,0 +1,5 @@
+1#theme dark and light ma delay solve and add theme in DB so whenever the theme cookie not pressent in the browser then we
+retrive from DB 
+
+2# code is not clean everwhere have logs 
+ 

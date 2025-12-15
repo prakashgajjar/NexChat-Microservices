@@ -29,3 +29,22 @@ infrastructure :
  testing : jest and k6 
 
 
+total tools use 
+
+next js ,
+express , 
+mongodb , indexDb , redis 
+encyptions 
+microservices 
+docker 
+kubernatice 
+sockets 
+nodemailer 
+Nginx
+
+
+
+task :
+
+
+user own profile and bio not builded

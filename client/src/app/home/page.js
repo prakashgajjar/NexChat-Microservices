@@ -1,6 +1,5 @@
 "use client";
 
-import ChatList from "@/components/ChatList";
 import ChatWindow from "@/components/ChatWindow";
 import { useEffect } from "react";
 import { refreshToken } from "@/services/token/refreshToken.token.js";
@@ -13,8 +12,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex w-screen h-screen">
-      <ChatList />
+    <div className="flex w-full h-screen">
       <ChatWindow />
     </div>
   );

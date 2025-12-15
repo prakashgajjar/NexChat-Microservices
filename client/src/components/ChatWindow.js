@@ -11,6 +11,7 @@ import {
   sendMessage,
   getMessages,
 } from "@/services/message/message.service.js";
+import Image from "next/image";
 
 // Format time like WhatsApp → "4:23 PM"
 function formatMessageTime(dateString) {
@@ -41,7 +42,13 @@ let socket;
 
 export default function ChatWindow() {
   const { theme } = useTheme();
-  const { selectedUser, setSelectedUser, currentUser } = useAppContext();
+  const {
+    selectedUser,
+    setSelectedUser,
+    currentUser,
+    isBgAvailable,
+    setIsBgAvailable,
+  } = useAppContext();
   const searchParams = useSearchParams();
   const userIdFromURL = searchParams.get("id");
 
@@ -59,13 +66,16 @@ export default function ChatWindow() {
     }, 50);
   };
 
-
   useEffect(() => {
     async function loadUserFromURL() {
       if (!selectedUser && userIdFromURL) {
         try {
           const user = await getUserProfile(userIdFromURL);
-          console.log(user);
+          // console.log(user);
+          setIsBgAvailable(user?.ui?.chatBgUrl)
+          // setIsBgAvailable(
+          //   "https://images.pexels.com/photos/28029006/pexels-photo-28029006.jpeg"
+          // );
           setSelectedUser(user);
         } catch (err) {
           console.log("Could not load user from URL:", err);
@@ -75,7 +85,6 @@ export default function ChatWindow() {
 
     loadUserFromURL();
   }, [userIdFromURL, selectedUser]);
-
 
   useEffect(() => {
     if (!currentUser?.userId) return;
@@ -118,7 +127,6 @@ export default function ChatWindow() {
     return () => socket.disconnect();
   }, [currentUser?.userId, selectedUser?.userId]);
 
-
   useEffect(() => {
     const userToLoad = selectedUser?.userId || userIdFromURL;
     if (!userToLoad || !currentUser?.userId) return;
@@ -126,6 +134,7 @@ export default function ChatWindow() {
     let isMounted = true;
 
     async function loadMessagesNow() {
+      console.log(currentUser);
       try {
         setMessages([]);
         const msgs = await getMessages(userToLoad);
@@ -153,7 +162,6 @@ export default function ChatWindow() {
       isMounted = false;
     };
   }, [selectedUser?.userId, userIdFromURL, currentUser?.userId]);
-
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -204,7 +212,6 @@ export default function ChatWindow() {
     }
   };
 
-
   const avatarLetter = () =>
     selectedUser?.username?.charAt(0)?.toUpperCase() || "?";
 
@@ -229,7 +236,7 @@ export default function ChatWindow() {
   const activeUser = selectedUser || {};
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full ">
       {/* HEADER */}
       <header
         className={`flex items-center gap-3 px-6 py-3 border-b ${
@@ -248,7 +255,7 @@ export default function ChatWindow() {
           {activeUser.username?.charAt(0)?.toUpperCase() || "?"}
         </div>
         <div className="flex flex-col">
-          <p className="font-semibold">{activeUser.username}</p>
+          <p className="font-semibold">{activeUser?.username}</p>
 
           <span
             className={`text-xs ${
@@ -263,63 +270,78 @@ export default function ChatWindow() {
       {/* MESSAGES */}
       <div
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto px-6 py-4 space-y-3 ${
+        className={`relative flex-1 overflow-y-auto px-6 py-4 space-y-3 transition-colors duration-300 ${
           theme === "dark" ? "bg-zinc-900" : "bg-gray-50"
         }`}
       >
-        {Object.entries(
-          messages.reduce((acc, msg) => {
-            const label = getDateLabel(msg.createdAt);
-            if (!acc[label]) acc[label] = [];
-            acc[label].push(msg);
-            return acc;
-          }, {})
-        ).map(([label, msgs]) => (
-          <div key={label}>
-            <div className="text-center my-3">
-              <span
-                className={`px-3 py-1 rounded-full text-xs ${
-                  theme === "dark"
-                    ? "bg-zinc-800 text-gray-300"
-                    : "bg-gray-300 text-gray-700"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
+        {/* Background image layer */}
+        {isBgAvailable && (
+          <Image
+            src={isBgAvailable}
+            alt="Chat background"
+            fill
+            priority
+            className="object-cover opacity-80 pointer-events-none"
+          />
+        )}
 
-            {msgs.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  msg.fromMe ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow ${
-                    msg.fromMe
-                      ? theme === "dark"
-                        ? "bg-zinc-700 text-white"
-                        : "bg-zinc-300 text-black"
-                      : theme === "dark"
-                      ? "bg-zinc-800 border border-zinc-700 text-gray-100"
-                      : "bg-white border border-gray-300"
+        {/* Optional dark/light overlay to respect theme */}
+       
+        {/* Content layer */}
+        <div className="relative z-10 space-y-3">
+          {Object.entries(
+            messages.reduce((acc, msg) => {
+              const label = getDateLabel(msg.createdAt);
+              if (!acc[label]) acc[label] = [];
+              acc[label].push(msg);
+              return acc;
+            }, {})
+          ).map(([label, msgs]) => (
+            <div key={label}>
+              <div className="text-center my-3">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs ${
+                    theme === "dark"
+                      ? "bg-zinc-800 text-gray-300"
+                      : "bg-gray-300 text-gray-700"
                   }`}
                 >
-                  <div className="flex items-end gap-2">
-                    <p className="whitespace-pre-wrap wrap-break-word flex-1 leading-relaxed">
-                      {msg.text}
-                    </p>
+                  {label}
+                </span>
+              </div>
 
-                    <span className="text-[10px] opacity-70 min-w-fit">
-                      {formatMessageTime(msg.createdAt)}
-                    </span>
+              {msgs.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${
+                    msg.fromMe ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow ${
+                      msg.fromMe
+                        ? theme === "dark"
+                          ? "bg-zinc-700 text-white"
+                          : "bg-zinc-300 text-black"
+                        : theme === "dark"
+                        ? "bg-zinc-800 border border-zinc-700 text-gray-100"
+                        : "bg-white border border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-end gap-2">
+                      <p className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                        {msg.text}
+                      </p>
+                      <span className="text-[10px] opacity-70 min-w-fit">
+                        {formatMessageTime(msg.createdAt)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* INPUT BAR */}

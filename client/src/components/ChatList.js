@@ -83,7 +83,7 @@ export default function ChatList() {
 
   return (
     <div
-      className={`w-80 flex flex-col border-r transition-all duration-300 
+      className={`flex flex-col border-r transition-all duration-300  h-screen
         ${
           isDark
             ? "bg-zinc-900 border-zinc-800 text-gray-100"
@@ -119,7 +119,7 @@ export default function ChatList() {
         />
       </div>
 
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1  ">
         {filteredUsers.length === 0 && (
           <div className="text-center text-gray-500 py-6 text-sm">
             No contacts found
