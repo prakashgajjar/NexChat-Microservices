@@ -1,10 +1,10 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
-import ChatList from "@/components/ChatList";
 import { useAppContext } from "@/context/AppContext.context.js";
 import { useEffect, useRef, useState } from "react";
 import { getMe } from "@/services/user/user.service.js";
+import ListMain from "@/components/ListMain";
 
 export default function HomeLayout({ children }) {
   const { setCurrentUser } = useAppContext();
@@ -51,7 +51,7 @@ export default function HomeLayout({ children }) {
       <Sidebar />
 
       <div style={{ width: chatListWidth }} className="shrink-0">
-        <ChatList />
+        <ListMain />
       </div>
 
       <div

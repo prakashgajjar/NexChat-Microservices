@@ -12,6 +12,7 @@ import {
   getMessages,
 } from "@/services/message/message.service.js";
 import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 
 // Format time like WhatsApp → "4:23 PM"
 function formatMessageTime(dateString) {
@@ -72,7 +73,7 @@ export default function ChatWindow() {
         try {
           const user = await getUserProfile(userIdFromURL);
           // console.log(user);
-          setIsBgAvailable(user?.ui?.chatBgUrl)
+          setIsBgAvailable(user?.ui?.chatBgUrl);
           // setIsBgAvailable(
           //   "https://images.pexels.com/photos/28029006/pexels-photo-28029006.jpeg"
           // );
@@ -217,19 +218,46 @@ export default function ChatWindow() {
 
   if (!selectedUser && !userIdFromURL) {
     return (
+        <div className="flex h-screen w-full">
+
+      {/* Chat Empty State */}
       <div
-        className={`flex-1 flex flex-col items-center justify-center text-center ${
-          theme === "dark"
-            ? "bg-zinc-900 text-gray-300"
-            : "bg-gray-100 text-gray-700"
-        }`}
+        className={`flex-1 flex flex-col items-center justify-center text-center transition-colors duration-300
+          ${
+            theme === "dark"
+              ? "bg-zinc-900 text-gray-300"
+              : "bg-gray-100 text-gray-700"
+          }
+        `}
       >
-        <div className="text-5xl mb-4">💬</div>
-        <h2 className="text-3xl font-semibold">NexChat</h2>
-        <p className="opacity-70 mt-2 text-sm">
+        {/* Icon */}
+        <div
+          className={`h-14 w-14 mb-4 rounded-2xl flex items-center justify-center shadow-sm
+            ${
+              theme === "dark"
+                ? "bg-zinc-800 border border-zinc-700"
+                : "bg-white border border-gray-200"
+            }
+          `}
+        >
+          <MessageCircle
+            className={`h-7 w-7 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}
+          />
+        </div>
+
+        {/* Title */}
+        <h2 className="text-3xl font-semibold">
+          NexChat
+        </h2>
+
+        {/* Subtitle */}
+        <p className="opacity-70 mt-2 text-sm max-w-xs">
           Select a user to start a conversation.
         </p>
       </div>
+    </div>
     );
   }
 
@@ -286,7 +314,7 @@ export default function ChatWindow() {
         )}
 
         {/* Optional dark/light overlay to respect theme */}
-       
+
         {/* Content layer */}
         <div className="relative z-10 space-y-3">
           {Object.entries(

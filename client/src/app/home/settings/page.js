@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 const Page = () => {
@@ -14,7 +14,7 @@ const Page = () => {
         ${isDark ? "bg-zinc-900 text-white" : "bg-gray-100 text-gray-800"}
       `}
     >
-      {/* Main Search Area */}
+      {/* Main Settings Area */}
       <main className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center text-center gap-4">
           
@@ -28,7 +28,7 @@ const Page = () => {
               }
             `}
           >
-            <Search
+            <Settings
               className={`h-7 w-7 ${
                 isDark ? "text-zinc-300" : "text-gray-600"
               }`}
@@ -37,7 +37,7 @@ const Page = () => {
 
           {/* Title */}
           <h1 className="text-2xl font-semibold tracking-wide">
-            Find Users
+            Settings
           </h1>
 
           {/* Subtitle */}
@@ -46,7 +46,7 @@ const Page = () => {
               isDark ? "text-zinc-400" : "text-gray-500"
             }`}
           >
-            Search by username or email to start a conversation or view profiles.
+            Select a category from the sidebar to view and update your preferences.
           </p>
         </div>
       </main>

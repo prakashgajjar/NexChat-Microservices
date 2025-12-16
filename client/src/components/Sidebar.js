@@ -5,16 +5,17 @@ import {
   FiSettings,
   FiMoon,
   FiSun,
-  FiMapPin, // Nearby Chats
-  FiSearch, // Find User
+  FiSearch,
 } from "react-icons/fi";
 
+import { useAppContext } from "@/context/AppContext.context.js";
 import { useRouter } from "next/navigation";
-
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Sidebar() {
   const { theme, toggleTheme } = useTheme();
+  const { isScreenAbout, setIsScreenAbout } = useAppContext();
+
   const isDark = theme === "dark";
 
   const router = useRouter();
@@ -34,22 +35,42 @@ export default function Sidebar() {
       <FiUsers
         onClick={() => {
           router.push("/home");
+          setIsScreenAbout({
+            isContact: true,
+            isSetting: false,
+            isSearch: false,
+            isGroup: false,
+          });
         }}
         className="text-2xl cursor-pointer hover:text-gray-400 transition"
       />
-
-      {/* NEARBY CHATS */}
 
       {/* FIND USER */}
       <FiSearch
         onClick={() => {
           router.push("/home/find-user");
+          setIsScreenAbout({
+            isContact: false,
+            isSetting: false,
+            isSearch: true,
+            isGroup: false,
+          });
         }}
         className="text-2xl cursor-pointer hover:text-gray-400 transition"
       />
 
       {/* ALL CHATS */}
-      <FiMessageCircle className="text-2xl cursor-pointer hover:text-gray-400 transition" />
+      <FiMessageCircle
+        className="text-2xl cursor-pointer hover:text-gray-400 transition"
+        onClick={() => {
+          setIsScreenAbout({
+            isContact: false,
+            isSetting: false,
+            isSearch: false,
+            isGroup: true,
+          });
+        }}
+      />
 
       {/* Bottom Section */}
       <div className="mt-auto mb-6 space-y-4 flex flex-col items-center">
@@ -70,7 +91,13 @@ export default function Sidebar() {
         <FiSettings
           className="text-2xl cursor-pointer hover:text-gray-400 transition"
           onClick={() => {
-            router.push("/home/setting");
+            router.push("/home/settings");
+            setIsScreenAbout({
+              isContact: false,
+              isSetting: true,
+              isSearch: false,
+              isGroup: false,
+            });
           }}
         />
       </div>
