@@ -107,7 +107,7 @@ const ChatAppearancePage = () => {
 
           {/* Background Section */}
           <section>
-            <ThemeSwiper isDark={isDark} />
+            <ThemeSwiper />
           </section>
 
           {/* Info */}

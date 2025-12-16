@@ -3,27 +3,38 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Check, X, Plus } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { updateChatBgUrl } from "@/services/ui/Theme.ui";
 
 const INITIAL_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600",
-  "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=600",
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600",
-  "https://images.unsplash.com/photo-1499346030926-9a72daac6c63?w=600",
-  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861344/w6_f6v4no.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861355/bg36_fr7ayj.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861252/bg20_xfdl0b.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861227/bg40_howbcy.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861215/image001_uljxww.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861220/image002_f1lxbi.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861163/bg37_pu9m7v.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861149/bg33_xynsuo.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861137/bg38_os1owb.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861132/bg34_xkf1cr.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861128/bg31_yyzn4a.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765861120/bg23_dtlzsi.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765860977/bg12_hbqwk3.jpg",
+  "https://res.cloudinary.com/dsndcjfwh/image/upload/v1765860974/bg06_r9eptq.jpg",
 ];
 
-export default function ThemeSwiper({ selectedBg, onSelect }) {
+export default function ThemeSwiper() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const [backgrounds, setBackgrounds] = useState(INITIAL_BACKGROUNDS);
+  const [currentBg, setCurrentBg] = useState(""); // ✅ ACTIVE BG
   const [preview, setPreview] = useState(null);
   const [customUrl, setCustomUrl] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const endRef = useRef(null);
 
-  /* Infinite scroll (horizontal) */
+  /* Infinite horizontal scroll */
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -45,91 +56,85 @@ export default function ThemeSwiper({ selectedBg, onSelect }) {
     setCustomUrl("");
   };
 
+  /* ✅ SAVE BACKGROUND */
+  const handleSetBackground = async () => {
+    if (!preview) return;
+
+    try {
+      setSaving(true);
+
+      await updateChatBgUrl(preview);
+
+      // ✅ Local state becomes source of truth
+      setCurrentBg(preview);
+      setPreview(null);
+    } catch (err) {
+      console.error(err?.message || "Failed to update background");
+      alert("Failed to update background. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="w-full">
       <h2 className="font-medium mb-3">Chat background</h2>
 
       {/* Add URL */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium mb-2">
           Add custom background
         </label>
 
         <div
-          className={`      flex items-center gap-2
-      rounded-2xl border
-      bg-white 
-      border-gray-200 
-      px-3 py-2
-       ${
-         isDark ? "bg-zinc-800 border-gray-400" : "bg-gray-200 border-gray-400 "
-       }
-      focus-within:ring-2 focus-within:ring-blue-500
-      transition
-    `}
+          className={`
+            flex items-center gap-2 rounded-2xl border px-3 py-2 transition
+            ${
+              isDark
+                ? "bg-zinc-800 border-zinc-600"
+                : "bg-gray-200 border-gray-300"
+            }
+            focus-within:ring-2 focus-within:ring-blue-500
+          `}
         >
           <input
             value={customUrl}
             onChange={(e) => setCustomUrl(e.target.value)}
             placeholder="Paste image URL (https://...)"
-            className={` flex-1 bg-transparent outline-none
-             
-        text-sm
-        placeholder-gray-400`}
+            className="flex-1 bg-transparent outline-none text-sm"
           />
 
           <button
             onClick={addCustomBg}
             disabled={!customUrl}
             className="
-        flex items-center justify-center
-        h-9 w-9
-        rounded-xl
-        bg-blue-600 text-white
-        hover:bg-blue-700
-        disabled:opacity-40 disabled:cursor-not-allowed
-        transition
-      "
-            aria-label="Add background"
+              h-9 w-9 rounded-xl bg-blue-600 text-white
+              hover:bg-blue-700 disabled:opacity-40
+            "
           >
             <Plus size={18} />
           </button>
         </div>
-
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Recommended size: 1080×1920 • JPG / PNG
-        </p>
       </div>
 
       {/* Swiper */}
-      <div
-        className="
-          flex gap-4 overflow-x-auto scrollbar-hide
-          snap-x snap-mandatory scroll-smooth
-          pb-2
-        "
-      >
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2">
         {backgrounds.map((bg, i) => {
-          const active = selectedBg === bg;
+          const active = currentBg === bg;
 
           return (
             <button
               key={`${bg}-${i}`}
               onClick={() => setPreview(bg)}
               className={`
-                snap-center
-                relative
-                min-w-[140px] h-28
+                snap-center relative min-w-[140px] h-28
                 rounded-2xl overflow-hidden
-                transition-all
                 ${active ? "ring-2 ring-blue-500" : ""}
               `}
             >
-              {/* Lazy background */}
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${bg})` }}
-                loading="lazy"
               />
 
               {active && (
@@ -141,11 +146,10 @@ export default function ThemeSwiper({ selectedBg, onSelect }) {
           );
         })}
 
-        {/* Infinite trigger */}
         <div ref={endRef} className="min-w-[1px]" />
       </div>
 
-      {/* Fullscreen Preview */}
+      {/* Preview */}
       {preview && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
           <div
@@ -153,26 +157,30 @@ export default function ThemeSwiper({ selectedBg, onSelect }) {
             style={{
               backgroundImage: `url(${preview})`,
               backgroundSize: "contain",
-              backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
             }}
           >
-            {/* Actions */}
             <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4">
               <button
                 onClick={() => setPreview(null)}
-                className="px-4 py-2 rounded-full bg-white/90 flex items-center gap-2"
+                disabled={saving}
+                className={`
+                  px-5 py-2.5 rounded-full border backdrop-blur-md
+                  ${isDark
+                    ? "bg-zinc-900/70 text-white border-zinc-700"
+                    : "bg-white/70 text-gray-800 border-gray-200"}
+                `}
               >
                 <X size={18} /> Cancel
               </button>
+
               <button
-                onClick={() => {
-                  onSelect(preview);
-                  setPreview(null);
-                }}
-                className="px-4 py-2 rounded-full bg-green-600 text-white flex items-center gap-2"
+                onClick={handleSetBackground}
+                disabled={saving}
+                className="px-5 py-2.5 rounded-full bg-emerald-600 text-white"
               >
-                <Check size={18} /> Set Background
+                {saving ? "Saving..." : <><Check size={18} /> Set Background</>}
               </button>
             </div>
           </div>

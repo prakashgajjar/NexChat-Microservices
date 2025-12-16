@@ -18,7 +18,7 @@ const HelpAndFeedbackPage = () => {
   const handleSubmit = () => {
     if (!message.trim()) return;
     // TODO: connect API / email / backend
-    console.log("Feedback submitted:", message);
+    // console.log("Feedback submitted:", message);
     setMessage("");
   };
 

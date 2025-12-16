@@ -4,13 +4,21 @@ export const verifyToken = (req, res, next) => {
   const token = req.cookies?.accessToken;
   console.log("Verifying token from cookies:", token);
   if (!token) {
-    return res.status(401).json({ success: false, message: "No token in cookies" });
+    return res.json({
+      status: 401,
+      success: false,
+      message: "No token in cookies",
+    });
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(403).json({ success: false, message: "Token invalid or expired" });
+    return res.json({
+      status: 401,
+      success: false,
+      message: "Token invalid or expired",
+    });
   }
 };

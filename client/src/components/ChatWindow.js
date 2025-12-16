@@ -305,7 +305,7 @@ export default function ChatWindow() {
         {/* Background image layer */}
         {isBgAvailable && (
           <Image
-            src={isBgAvailable}
+            src={`${isBgAvailable}`}
             alt="Chat background"
             fill
             priority

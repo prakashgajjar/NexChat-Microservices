@@ -1,21 +1,21 @@
 import axios from "axios";
+import { refreshToken } from "../token/refreshToken.token.js";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL_MESSAGES || "http://localhost:5002";
 
-
-  export async function sendMessage(payload) {
+export async function sendMessage(payload) {
   try {
-    const res = await axios.post(
-      `${API_BASE}/api/message/send`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      }
-    );
+    const res = await axios.post(`${API_BASE}/api/message/send`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+
+    if (res.status == 401) {
+      await refreshToken();
+    }
 
     if (!res.data.success) throw new Error(res.data.message);
 
@@ -28,12 +28,13 @@ const API_BASE =
 
 export async function getMessages(receiverId) {
   try {
-    const res = await axios.get(
-      `${API_BASE}/api/message/get/${receiverId}`,
-      {
-        withCredentials: true,
-      }
-    );
+    const res = await axios.get(`${API_BASE}/api/message/get/${receiverId}`, {
+      withCredentials: true,
+    });
+
+    if (res.status == 401) {
+      await refreshToken();
+    }
 
     if (!res.data.success) throw new Error(res.data.message);
 

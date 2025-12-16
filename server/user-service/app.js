@@ -8,6 +8,7 @@ import servicesRoutes from "./routes/services.routes.js";
 import { verifyToken } from "./middleware/verifyToken.js";
 import cookieParser from "cookie-parser";
 import cookieRoutes from "./routes/cookies.routes.js";
+import profielRoutes from "./routes/profile.routes.js"
 
 const PATH = "../../.env";
 dotenv.config({ path: PATH });
@@ -29,6 +30,7 @@ connectDB();
 app.use("/api/keys", storeKeys);
 app.use("/api/user", verifyToken, userRoutes);
 app.use("/api/services", servicesRoutes);
+app.use("/api/profile",verifyToken,profielRoutes)
 app.use("/api/cookies", verifyToken, cookieRoutes);
 
 app.listen(process.env.PORT_USER, () =>

@@ -1,22 +1,24 @@
 // services/user.service.js
-
-import axios from "axios";
-import { Fetch } from "socket.io-client";
+import { refreshToken } from "../token/refreshToken.token.js";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL_USER || "http://localhost:5001";
 
 export async function getContacts() {
   try {
-    const res = await fetch(`${API_BASE}/api/user/contacts/get`,{
+    const res = await fetch(`${API_BASE}/api/user/contacts/get`, {
       credentials: "include",
-      method: "POST", 
-      headers:{
+      method: "POST",
+      headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     const data = await res.json();
-    console.log("getContacts response data:", data.data);  
+    // console.log("getContacts response data:", data.data);
+
+    if (data?.status == 401) {
+      await refreshToken();
+    }
 
     if (!data.success) throw new Error(data.message);
 
@@ -29,13 +31,17 @@ export async function getContacts() {
 
 export async function getUserProfile(userId) {
   try {
-    const res = await fetch(`${API_BASE}/api/user/id/${userId}`,{
+    const res = await fetch(`${API_BASE}/api/user/id/${userId}`, {
       credentials: "include",
-      headers:{
+      headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     const data = await res.json();
+
+    if (data?.status == 401) {
+      await refreshToken();
+    }
 
     if (!data.success) throw new Error(data.message);
 
@@ -55,7 +61,11 @@ export async function getUserProfileByUsername(username) {
     });
 
     const data = await res.json();
-    console.log("getUserProfileByUsername response data:", data);
+
+    if (data?.status == 401) {
+      await refreshToken();
+    }
+    // console.log("getUserProfileByUsername response data:", data);
 
     //If backend returns no users, DO NOT throw an error
     if (!data.success && data.message === "No users found") {
@@ -75,16 +85,19 @@ export async function getUserProfileByUsername(username) {
   }
 }
 
-
 export async function getUserPublicKey(userId) {
   try {
-    const res = await fetch(`${API_BASE}/user/public-key/${userId}`,{
+    const res = await fetch(`${API_BASE}/user/public-key/${userId}`, {
       credentials: "include",
-      headers:{
+      headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     const data = await res.json();
+
+    if (data?.status == 401) {
+      await refreshToken();
+    }
 
     if (!data.success) throw new Error(data.message);
 
@@ -99,12 +112,17 @@ export async function getMe() {
   try {
     const res = await fetch(`${API_BASE}/api/user/me`, {
       credentials: "include",
-      headers:{
+      headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     const data = await res.json();
-    console.log("getMe response data:", data);
+    // console.log("getMe response data:", data);
+
+    if (data?.status == 401) {
+      // console.log("in get me ")
+      await refreshToken();
+    }
 
     if (!data.success) throw new Error(data.message);
 

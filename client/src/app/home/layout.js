@@ -7,7 +7,7 @@ import { getMe } from "@/services/user/user.service.js";
 import ListMain from "@/components/ListMain";
 
 export default function HomeLayout({ children }) {
-  const { setCurrentUser } = useAppContext();
+  const { setCurrentUser, setIsBgAvailable } = useAppContext();
 
   const [chatListWidth, setChatListWidth] = useState(() => {
     if (typeof window === "undefined") return 360;
@@ -19,7 +19,9 @@ export default function HomeLayout({ children }) {
   useEffect(() => {
     async function fetchData() {
       const res = await getMe();
+      // console.log("userres",res)
       setCurrentUser(res);
+      setIsBgAvailable(res.ui.chatBgUrl);
     }
     fetchData();
   }, []);

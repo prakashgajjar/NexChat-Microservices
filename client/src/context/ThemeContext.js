@@ -11,7 +11,7 @@ export function ThemeProvider({ children }) {
   // Load theme from cookies on first render
   useEffect(() => {
     const savedTheme = Cookies.get("UUI_theme");
-    console.log("savedTheme", savedTheme)
+    // console.log("savedTheme", savedTheme)
 
     if (savedTheme) {
       setTheme(savedTheme);
