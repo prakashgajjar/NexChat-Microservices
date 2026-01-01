@@ -10,10 +10,26 @@
 }
 
 /* Hide scrollbar but keep scroll */
-.scrollbar-hide {
-  -ms-overflow-style: none;     /* IE & Edge */
-  scrollbar-width: none;        /* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120,120,120,0.5) transparent;
 }
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;                /* Chrome, Safari */
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 120, 120, 0.6);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(180, 180, 180, 0.9);
 }

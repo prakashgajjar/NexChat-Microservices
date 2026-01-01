@@ -264,145 +264,147 @@ export default function ChatWindow() {
   const activeUser = selectedUser || {};
 
   return (
-    <div className="flex-1 flex flex-col h-full ">
-      {/* HEADER */}
-      <header
-        className={`flex items-center gap-3 px-6 py-3 border-b ${
-          theme === "dark"
-            ? "bg-zinc-900 border-zinc-800 text-gray-100"
-            : "bg-white border-gray-200 text-black"
+   <div className="flex-1 flex flex-col h-full">
+  {/* HEADER */}
+  <header
+    className={`flex items-center gap-3 px-6 py-3 border-b ${
+      theme === "dark"
+        ? "bg-zinc-900 border-zinc-800 text-gray-100"
+        : "bg-white border-gray-200 text-black"
+    }`}
+  >
+    <div
+      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+        theme === "dark"
+          ? "bg-zinc-800 text-gray-200"
+          : "bg-gray-200 text-gray-700"
+      }`}
+    >
+      {activeUser.username?.charAt(0)?.toUpperCase() || "?"}
+    </div>
+    <div className="flex flex-col">
+      <p className="font-semibold">{activeUser?.username}</p>
+
+      <span
+        className={`text-xs ${
+          isOnline ? "text-green-400" : "text-gray-400"
         }`}
       >
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-            theme === "dark"
-              ? "bg-zinc-800 text-gray-200"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {activeUser.username?.charAt(0)?.toUpperCase() || "?"}
-        </div>
-        <div className="flex flex-col">
-          <p className="font-semibold">{activeUser?.username}</p>
+        {isOnline ? "Online" : "Offline"}
+      </span>
+    </div>
+  </header>
 
-          <span
-            className={`text-xs ${
-              isOnline ? "text-green-400" : "text-gray-400"
-            }`}
-          >
-            {isOnline ? "Online" : "Offline"}
-          </span>
-        </div>
-      </header>
+  {/* MESSAGES - Wrapper with relative positioning */}
+  <div className="relative flex-1 overflow-hidden">
+    {/* Fixed Background Image */}
+    {isBgAvailable && (
+      <div className="absolute inset-0 pointer-events-none">
+        <Image
+          src={`${isBgAvailable}`}
+          alt="Chat background"
+          fill
+          priority
+          className="object-cover "
+        />
+      </div>
+    )}
 
-      {/* MESSAGES */}
-      <div
-        ref={scrollRef}
-        className={`relative flex-1 overflow-y-auto px-6 py-4 space-y-3 transition-colors duration-300 ${
-          theme === "dark" ? "bg-zinc-900" : "bg-gray-50"
-        }`}
-      >
-        {/* Background image layer */}
-        {isBgAvailable && (
-          <Image
-            src={`${isBgAvailable}`}
-            alt="Chat background"
-            fill
-            priority
-            className="object-cover opacity-80 pointer-events-none"
-          />
-        )}
+    {/* Scrollable Content */}
+    <div
+      ref={scrollRef}
+      className={`absolute inset-0 overflow-y-auto px-6 py-4 transition-colors duration-300 ${
+        theme === "dark" ? "bg-transparent" : "bg-transparent"
+      }`}
+    >
+      <div className="relative z-[100px] space-y-3">
+        {Object.entries(
+          messages.reduce((acc, msg) => {
+            const label = getDateLabel(msg.createdAt);
+            if (!acc[label]) acc[label] = [];
+            acc[label].push(msg);
+            return acc;
+          }, {})
+        ).map(([label, msgs]) => (
+          <div key={label}>
+            <div className="text-center my-3">
+              <span
+                className={`px-3 py-1 rounded-full text-xs ${
+                  theme === "dark"
+                    ? "bg-zinc-800 text-gray-300"
+                    : "bg-gray-300 text-gray-700"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
 
-        {/* Optional dark/light overlay to respect theme */}
-
-        {/* Content layer */}
-        <div className="relative z-10 space-y-3">
-          {Object.entries(
-            messages.reduce((acc, msg) => {
-              const label = getDateLabel(msg.createdAt);
-              if (!acc[label]) acc[label] = [];
-              acc[label].push(msg);
-              return acc;
-            }, {})
-          ).map(([label, msgs]) => (
-            <div key={label}>
-              <div className="text-center my-3">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    theme === "dark"
-                      ? "bg-zinc-800 text-gray-300"
-                      : "bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-
-              {msgs.map((msg) => (
+            {msgs.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.fromMe ? "justify-end" : "justify-start"
+                }`}
+              >
                 <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.fromMe ? "justify-end" : "justify-start"
+                  className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow ${
+                    msg.fromMe
+                      ? theme === "dark"
+                        ? "bg-zinc-700 text-white"
+                        : "bg-zinc-300 text-black"
+                      : theme === "dark"
+                      ? "bg-zinc-800 border border-zinc-700 text-gray-100"
+                      : "bg-white border border-gray-300"
                   }`}
                 >
-                  <div
-                    className={`px-3 py-2 mb-1 rounded-xl max-w-xs text-sm shadow ${
-                      msg.fromMe
-                        ? theme === "dark"
-                          ? "bg-zinc-700 text-white"
-                          : "bg-zinc-300 text-black"
-                        : theme === "dark"
-                        ? "bg-zinc-800 border border-zinc-700 text-gray-100"
-                        : "bg-white border border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-end gap-2">
-                      <p className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
-                        {msg.text}
-                      </p>
-                      <span className="text-[10px] opacity-70 min-w-fit">
-                        {formatMessageTime(msg.createdAt)}
-                      </span>
-                    </div>
+                  <div className="flex items-end gap-2">
+                    <p className="whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                      {msg.text}
+                    </p>
+                    <span className="text-[10px] opacity-70 min-w-fit">
+                      {formatMessageTime(msg.createdAt)}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
-
-      {/* INPUT BAR */}
-      <footer
-        className={`p-4 border-t flex items-center ${
-          theme === "dark"
-            ? "bg-zinc-900 border-zinc-800"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type a message"
-          className={`flex-1 p-2 rounded-lg border focus:outline-none focus:ring-2 ${
-            theme === "dark"
-              ? "bg-zinc-800 text-gray-200 border-zinc-700 focus:ring-zinc-600"
-              : "bg-white text-black border-gray-300 focus:ring-gray-400"
-          }`}
-        />
-
-        <button
-          onClick={handleSend}
-          className={`ml-3 p-2 rounded-lg transition border ${
-            theme === "dark"
-              ? "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-gray-200"
-              : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-black"
-          }`}
-        >
-          <FiSend size={18} />
-        </button>
-      </footer>
     </div>
+  </div>
+
+  {/* INPUT BAR */}
+  <footer
+    className={`p-4 border-t flex items-center ${
+      theme === "dark"
+        ? "bg-zinc-900 border-zinc-800"
+        : "bg-white border-gray-200"
+    }`}
+  >
+    <input
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+      placeholder="Type a message"
+      className={`flex-1 p-2 rounded-lg border focus:outline-none focus:ring-2 ${
+        theme === "dark"
+          ? "bg-zinc-800 text-gray-200 border-zinc-700 focus:ring-zinc-600"
+          : "bg-white text-black border-gray-300 focus:ring-gray-400"
+      }`}
+    />
+
+    <button
+      onClick={handleSend}
+      className={`ml-3 p-2 rounded-lg transition border ${
+        theme === "dark"
+          ? "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-gray-200"
+          : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-black"
+      }`}
+    >
+      <FiSend size={18} />
+    </button>
+  </footer>
+</div>
   );
 }
