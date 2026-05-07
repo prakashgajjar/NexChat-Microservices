@@ -18,6 +18,7 @@ export async function getContacts() {
 
     if (data?.status == 401) {
       await refreshToken();
+      await getContacts(); //retry once
     }
 
     if (!data.success) throw new Error(data.message);
@@ -41,6 +42,7 @@ export async function getUserProfile(userId) {
 
     if (data?.status == 401) {
       await refreshToken();
+      await getUserProfile(userId); //retry once
     }
 
     if (!data.success) throw new Error(data.message);
@@ -64,6 +66,7 @@ export async function getUserProfileByUsername(username) {
 
     if (data?.status == 401) {
       await refreshToken();
+      await getUserProfileByUsername(username); //retry once
     }
     // console.log("getUserProfileByUsername response data:", data);
 
@@ -97,6 +100,7 @@ export async function getUserPublicKey(userId) {
 
     if (data?.status == 401) {
       await refreshToken();
+      await getUserPublicKey(userId); //retry once
     }
 
     if (!data.success) throw new Error(data.message);
@@ -122,6 +126,7 @@ export async function getMe() {
     if (data?.status == 401) {
       // console.log("in get me ")
       await refreshToken();
+      await getMe(); //retry once
     }
 
     if (!data.success) throw new Error(data.message);
