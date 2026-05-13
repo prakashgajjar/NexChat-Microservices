@@ -23,6 +23,13 @@ connectDB();
 
 app.use("/api/message", verifyToken, messageRouter);
 
+//use for docker compose to check message services is helthy
+app.get("/api/health", (req, res) => {
+  return res.status(200).json({
+    status: "OK",
+    message: "Message service is healthy",
+  });
+});
 app.listen(process.env.PORT_MESSAGE, () =>
   console.log(`Auth service running on port ${process.env.PORT_MESSAGE}`)
 );

@@ -33,6 +33,14 @@ app.use("/api/services", servicesRoutes);
 app.use("/api/profile",verifyToken,profielRoutes)
 app.use("/api/cookies", verifyToken, cookieRoutes);
 
+//use for docker compose to check user services is helthy
+app.get("/api/health", (req, res) => {
+  return res.status(200).json({
+    status: "OK",
+    message: "user service is healthy",
+  });
+});
+
 app.listen(process.env.PORT_USER, () =>
   console.log(`user service running on port ${process.env.PORT_USER}`)
 );

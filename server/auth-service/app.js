@@ -22,9 +22,17 @@ app.use(cookieParser());
 
 connectDB();
 
+
 app.use("/api/otp", otpRoutes);
 app.use("/api/auth", authRoutes);
 
+//use for docker compose to check auth services is helthy
+app.get("/api/health", (req, res) => {
+  return res.status(200).json({
+    status: "OK",
+    message: "Auth service is healthy",
+  });
+});
 app.listen(process.env.PORT_AUTH, () =>
   console.log(`Auth service running on port ${process.env.PORT_AUTH }`)
 );

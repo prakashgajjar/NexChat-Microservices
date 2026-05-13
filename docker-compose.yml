@@ -1,0 +1,353 @@
+version: '3.8'
+
+services:
+  # ==================== DATABASES ====================
+  
+  # MongoDB for Auth Service
+  mongo-auth:
+    image: mongo:7.0
+    container_name: mongo-auth
+    restart: always
+    # ports:
+    #   - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: auth-service
+    volumes:
+      - mongo-auth-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  # MongoDB for User Service
+  mongo-user:
+    image: mongo:7.0
+    container_name: mongo-user
+    restart: always
+    # ports:
+    #   - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: user-service
+    volumes:
+      - mongo-user-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  # MongoDB for Message Service
+  mongo-message:
+    image: mongo:7.0
+    container_name: mongo-message
+    restart: always
+    # ports:
+    #   - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: message-service
+    volumes:
+      - mongo-message-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  # ==================== BACKEND SERVICES ====================
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./server/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server/auth-service:/app
+      - /app/node_modules
+    environment:
+      # Ports
+      PORT_AUTH: 5000
+      PORT_USER: 5001
+      PORT_MESSAGE: 5002
+      PORT_REALTIME: 5004
+
+      # MongoDB - Updated for Docker
+      MONGO_AUTH_SERVICES_URL: mongodb://admin:admin123@mongo-auth:27017/auth-service?authSource=admin
+
+      # Redis - Updated for Docker
+      REDIS_URL: redis://redis:6379
+
+      # Mail Services
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      # Turnstile
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+
+      # Environment
+      NODE_ENV: development
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+
+    networks:
+      - messaging-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service
+  user-service:
+    build:
+      context: ./server/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: always
+    ports:
+      - "5001:5001"
+    depends_on:
+      mongo-user:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    volumes:
+      - ./server/user-service:/app
+      - /app/node_modules
+    environment:
+      # Ports
+      PORT_USER: 5001
+      PORT_AUTH: 5000
+      PORT_MESSAGE: 5002
+      PORT_REALTIME: 5004
+
+      # MongoDB - Updated for Docker
+      MONGO_USER_SERVICES_URI: mongodb://admin:admin123@mongo-user:27017/user-service?authSource=admin
+
+      # Redis - Updated for Docker
+      REDIS_URL: redis://redis:6379
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+
+      # Environment
+      NODE_ENV: development
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+      AUTH_SERVICE_URL: http://auth-service:5000
+
+    networks:
+      - messaging-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Message Service
+  message-service:
+    build:
+      context: ./server/messaging-service
+      dockerfile: Dockerfile
+    container_name: message-service
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      mongo-message:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    volumes:
+      - ./server/messaging-service:/app
+      - /app/node_modules
+    environment:
+      # Ports
+      PORT_MESSAGE: 5002
+      PORT_AUTH: 5000
+      PORT_USER: 5001
+      PORT_REALTIME: 5004
+
+      # MongoDB - Updated for Docker
+      MONGO_MESSAGE_SERVICES_URI: mongodb://admin:admin123@mongo-message:27017/message-service?authSource=admin
+
+      # Redis - Updated for Docker
+      REDIS_URL: redis://redis:6379
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+
+      # Environment
+      NODE_ENV: development
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+
+    networks:
+      - messaging-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Realtime Service (Socket.io)
+  realtime-service:
+    build:
+      context: ./server/realtime-service
+      dockerfile: Dockerfile
+    container_name: realtime-service
+    restart: always
+    ports:
+      - "5004:5004"
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    volumes:
+      - ./server/realtime-service:/app
+      - /app/node_modules
+    environment:
+      # Ports
+      PORT_REALTIME: 5004
+      PORT_AUTH: 5000
+      PORT_USER: 5001
+      PORT_MESSAGE: 5002
+
+      # Redis - Updated for Docker
+      REDIS_URL: redis://redis:6379
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+
+      # Environment
+      NODE_ENV: development
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+
+    networks:
+      - messaging-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5004"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==================== FRONTEND ====================
+
+  # Next.js Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: client
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - user-service
+      - message-service
+      - realtime-service
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      # Base URLs for client-side API calls
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+
+      # Google OAuth
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+
+      # Cloudflare Turnstile
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
+
+      NODE_ENV: development
+    networks:
+      - messaging-network
+
+# ==================== VOLUMES ====================
+volumes:
+  mongo-auth-data:
+    driver: local
+  mongo-user-data:
+    driver: local
+  mongo-message-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  messaging-network:
+    driver: bridge

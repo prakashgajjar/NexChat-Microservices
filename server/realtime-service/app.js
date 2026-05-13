@@ -10,13 +10,21 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
     credentials: true,
   },
 });
 
 // Store online users
 const onlineUsers = new Map();
+
+//use for docker compose to check realtime services is helthy
+app.get("/api/health", (req, res) => {
+  return res.status(200).json({
+    status: "OK",
+    message: "Realtime service is healthy",
+  });
+});
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
