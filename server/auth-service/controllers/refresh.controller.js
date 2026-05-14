@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import RefreshToken from "../models/RefreshTokenSchema.models.js";
-import { hashToken, generateJti } from "../utils/token.js";
+import { hashToken, generateJti } from "../utils/Token.js";
 
 export const refresh = async (req, res) => {
   try {

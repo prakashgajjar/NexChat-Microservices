@@ -17,10 +17,12 @@ services:
     volumes:
       - mongo-auth-data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    logging:
+      driver: none
     networks:
       - messaging-network
 
@@ -38,10 +40,12 @@ services:
     volumes:
       - mongo-user-data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    logging:
+      driver: none
     networks:
       - messaging-network
 
@@ -59,10 +63,12 @@ services:
     volumes:
       - mongo-message-data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    logging:
+      driver: none
     networks:
       - messaging-network
 
@@ -81,6 +87,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: none
     networks:
       - messaging-network
 
@@ -146,6 +154,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   # User Service
   user-service:
@@ -199,6 +212,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   # Message Service
   message-service:
@@ -251,6 +269,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   # Realtime Service (Socket.io)
   realtime-service:
@@ -298,6 +321,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
 
   # ==================== FRONTEND ====================
 
@@ -319,12 +347,12 @@ services:
       - ./client:/app
       - /app/node_modules
     environment:
-      # Base URLs for client-side API calls
+      # Base URLs for client-side API calls (use Docker service names for internal communication)
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
-      NEXT_PUBLIC_BACKEND_URL_AUTH: http://localhost:5000
-      NEXT_PUBLIC_BACKEND_URL_USER: http://localhost:5001
-      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://localhost:5002
-      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://localhost:5004
+      NEXT_PUBLIC_BACKEND_URL_AUTH: http://auth-service:5000
+      NEXT_PUBLIC_BACKEND_URL_USER: http://user-service:5001
+      NEXT_PUBLIC_BACKEND_URL_MESSAGES: http://message-service:5002
+      NEXT_PUBLIC_BACKEND_URL_REALTIME: http://realtime-service:5004
 
       # Google OAuth
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -333,6 +361,8 @@ services:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
 
       NODE_ENV: development
+    logging:
+      driver: none
     networks:
       - messaging-network
 
