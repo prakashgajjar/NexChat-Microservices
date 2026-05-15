@@ -109,7 +109,6 @@ export default function ChatWindow() {
       } catch (e) {
         console.error("Decrypt failed:", e);
       }
-      X;
     });
 
     socket.on("user-online", (onlineUserId) => {
