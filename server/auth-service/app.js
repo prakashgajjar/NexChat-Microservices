@@ -6,8 +6,7 @@ import connectDB from "./configs/db.config.js";
 import otpRoutes from "./routes/otp.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 
-const PATH =  "../../.env" ;
-dotenv.config({ path:PATH});
+dotenv.config();
 const app = express();
 
 app.use(

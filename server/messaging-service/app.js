@@ -6,8 +6,7 @@ import connectDB  from "./configs/db.config.js";
 import messageRouter from "./routes/message.routes.js"
 import { verifyToken } from "./middleware/verifyToken.js";
 
-const PATH =  "../../.env" ;
-dotenv.config({ path:PATH});
+dotenv.config();
 const app = express();
 app.use(
   cors({

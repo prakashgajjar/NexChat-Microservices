@@ -10,8 +10,7 @@ import cookieParser from "cookie-parser";
 import cookieRoutes from "./routes/cookies.routes.js";
 import profielRoutes from "./routes/profile.routes.js"
 
-const PATH = "../../.env";
-dotenv.config({ path: PATH });
+dotenv.config();
 
 const app = express();
 
