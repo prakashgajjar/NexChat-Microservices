@@ -31,5 +31,5 @@ app.get("/api/health", (req, res) => {
   });
 });
 app.listen(process.env.PORT_MESSAGE, () =>
-  console.log(`Auth service running on port ${process.env.PORT_MESSAGE}`)
+  console.log(`messaging service running on port ${process.env.PORT_MESSAGE}`)
 );
